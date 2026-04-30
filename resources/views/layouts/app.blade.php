@@ -101,7 +101,7 @@
                     <div class="bg-white p-2 rounded-xl shadow-lg shrink-0">
                         <i class="fas fa-hand-holding-heart text-emerald-primary text-lg"></i>
                     </div>
-                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">Aplikasi<br><span class="text-emerald-300 text-xs text-nowrap font-bold tracking-widest">SEDEKAH SYSTEM</span></span>
+                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">Sistem<br><span class="text-emerald-300 text-xs text-nowrap font-bold tracking-widest">Aplikasi SEDEKAH</span></span>
                 </div>
 
                 <div class="icon-collapsed w-full justify-center">
@@ -122,22 +122,23 @@
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Dashboard Operasional</span>
                     </a>
 
-                    <a href="{{ route('admin.verifikasi') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.verifikasi') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <!-- Menggunakan # karena view belum ada -->
+                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
                         <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Verifikasi Donasi</span>
                     </a>
 
-                    <a href="{{ route('admin.riwayat') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.riwayat') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
                         <i class="fas fa-list-ul w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Kelola Riwayat</span>
                     </a>
 
-                    <a href="{{ route('admin.donatur') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.donatur') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
                         <i class="fas fa-address-book w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Donatur</span>
                     </a>
 
-                    <a href="{{ route('admin.audit') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.audit') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
                         <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring Audit Log</span>
                     </a>
@@ -151,22 +152,23 @@
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Dashboard Eksekutif</span>
                     </a>
 
-                    <a href="{{ route('direktur.riwayat_donatur') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.riwayat_donatur') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <!-- Menggunakan # karena view belum ada -->
+                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
                         <i class="fas fa-user-shield w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring Donatur</span>
                     </a>
 
-                    <a href="{{ route('direktur.laporan') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.laporan') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
                         <i class="fas fa-file-invoice-dollar w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Donasi & Keuangan</span>
                     </a>
 
-                    <a href="{{ route('direktur.logistik') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.logistik') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
                         <i class="fas fa-boxes w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Logistik</span>
                     </a>
 
-                    <a href="{{ route('direktur.users') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.users') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
                         <i class="fas fa-user-cog w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen User</span>
                     </a>
