@@ -92,9 +92,10 @@
 
     <div class="flex min-h-screen relative overflow-hidden">
         
-        <!-- SIDEBAR (DNA Project SEDEKAH) -->
+        <!-- SIDEBAR -->
         <aside id="main-sidebar" class="bg-emerald-primary dark:bg-emerald-900 h-screen text-white flex flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
             
+            <!-- Logo Section -->
             <div class="p-6 h-24 flex items-center border-b border-white/10 shrink-0">
                 <div class="logo-full items-center gap-3">
                     <div class="bg-white p-2 rounded-xl shadow-lg shrink-0">
@@ -104,53 +105,87 @@
                 </div>
 
                 <div class="icon-collapsed w-full justify-center">
-                    <div class="bg-white p-3 rounded-2xl shadow-xl border-4 border-emerald-400/30">
+                    <div class="bg-white p-3 rounded-2xl shadow-xl border-4 border-emerald-400/30 text-center">
                         <i class="fas fa-hand-holding-heart text-emerald-primary text-2xl"></i>
                     </div>
                 </div>
             </div>
 
+            <!-- Navigation Section -->
             <nav class="flex-1 px-4 mt-6 overflow-y-auto custom-scrollbar space-y-2">
-                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Navigasi Utama</div>
                 
-                <a href="{{ route('admin.dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-chart-line w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring</span>
-                </a>
+                @if(Auth::user()->role == 'administrator')
+                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Operasional Admin</div>
+                    
+                    <a href="{{ route('admin.dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-desktop w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Dashboard Operasional</span>
+                    </a>
 
-                <a href="{{ route('admin.verifikasi') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.verifikasi') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-check-double w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Verifikasi</span>
-                </a>
+                    <a href="{{ route('admin.verifikasi') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.verifikasi') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Verifikasi Donasi</span>
+                    </a>
 
-                <a href="{{ route('admin.donatur') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.donatur') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-users w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Donatur</span>
-                </a>
+                    <a href="{{ route('admin.riwayat') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.riwayat') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-list-ul w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Kelola Riwayat</span>
+                    </a>
 
-                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Manajemen</div>
+                    <a href="{{ route('admin.donatur') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.donatur') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-address-book w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Donatur</span>
+                    </a>
 
-                <a href="{{ route('admin.distribusi') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.distribusi') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-box-open w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Distribusi</span>
-                </a>
+                    <a href="{{ route('admin.audit') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.audit') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring Audit Log</span>
+                    </a>
+                @endif
 
-                <a href="{{ route('admin.riwayat') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.riwayat') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-history w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Riwayat Transaksi</span>
-                </a>
+                @if(Auth::user()->role == 'direktur')
+                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Panel Eksekutif</div>
+
+                    <a href="{{ route('direktur.dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-chart-pie w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Dashboard Eksekutif</span>
+                    </a>
+
+                    <a href="{{ route('direktur.riwayat_donatur') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.riwayat_donatur') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-user-shield w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring Donatur</span>
+                    </a>
+
+                    <a href="{{ route('direktur.laporan') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.laporan') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-file-invoice-dollar w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Donasi & Keuangan</span>
+                    </a>
+
+                    <a href="{{ route('direktur.logistik') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.logistik') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-boxes w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Logistik</span>
+                    </a>
+
+                    <a href="{{ route('direktur.users') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.users') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-user-cog w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen User</span>
+                    </a>
+                @endif
+                
             </nav>
 
+            <!-- Bottom Action -->
             <div class="p-4 mb-4">
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">@csrf</form>
                 <button onclick="confirmLogout(event)" 
                     class="nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 hover:shadow-lg text-red-100 transition-all border border-white/5 group">
-                    <i class="fas fa-power-off w-6 text-center group-hover:scale-110"></i>
+                    <i class="fas fa-power-off w-6 text-center group-hover:scale-110 text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Logout</span>
                 </button>
             </div>
         </aside>
 
+        <!-- MAIN CONTENT AREA -->
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
             <!-- Header/Navbar -->
             <header class="h-20 bg-white dark:bg-emerald-900 border-b border-emerald-50 dark:border-emerald-800 shadow-sm flex justify-between items-center px-8 z-20 shrink-0 transition-colors duration-300">
@@ -184,7 +219,8 @@
                 </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <!-- Page Content -->
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#f8fafc] dark:bg-[#041a16]">
                 <div class="max-w-7xl mx-auto">
                     @yield('content')
                 </div>
@@ -202,7 +238,7 @@
             event.preventDefault();
             Swal.fire({
                 title: 'Yakin keluar?',
-                text: "Sesi admin Anda akan segera diakhiri.",
+                text: "Sesi Anda akan segera diakhiri.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#008f5d',
