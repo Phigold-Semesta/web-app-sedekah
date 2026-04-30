@@ -10,12 +10,15 @@ class User extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'user'; //
-    protected $primaryKey = 'id_user'; //
+    protected $table = 'user'; 
+    protected $primaryKey = 'id_user'; 
 
+    /**
+     * Sesuai gambar database bos: kolomnya 'username', bukan 'email'.
+     */
     protected $fillable = [
         'nama_user',
-        'email',
+        'username', // Diperbaiki dari 'email'
         'password',
         'role',
     ];
@@ -24,6 +27,14 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    /**
+     * Beritahu Laravel bahwa kita menggunakan kolom 'username' untuk login.
+     */
+    public function username()
+    {
+        return 'username';
+    }
 
     public function donasi(): HasMany
     {
