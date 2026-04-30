@@ -34,7 +34,8 @@
                 extend: {
                     colors: {
                         'emerald-primary': '#008f5d',
-                        'gold-accent': '#b45309',
+                        'emerald-dark': '#065f46', /* Diperhalus agar tidak terlalu gelap */
+                        'gold-accent': '#FFF200',
                     }
                 }
             }
@@ -43,186 +44,197 @@
 
     <style>
         [x-cloak] { display: none !important; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s ease; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
         
-        .sidebar-active {
-            background-color: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
-
+        /* SIDEBAR SOWAN V2 CORE STYLE */
         #main-sidebar {
             width: 88px; 
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Indikator Aktif SOWAN V2 (Garis Kuning) */
+        .sidebar-active {
+            color: #ffffff !important;
+            font-weight: 800;
+        }
+
+        /* Hanya tampilkan gelembung transparan saat sidebar di-hover (lebar) */
+        #main-sidebar:hover .sidebar-active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Indikator Garis Samping Kuning */
+        .sidebar-active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 25%;
+            height: 50%;
+            width: 4px;
+            background: #FFF200;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px rgba(255, 242, 0, 0.5);
         }
 
         @media (min-width: 1024px) {
             #main-sidebar:hover { width: 288px; }
+            
             #main-sidebar .nav-text, #main-sidebar .logo-full, #main-sidebar .menu-header {
-                opacity: 0; display: none; transition: opacity 0.3s ease;
+                opacity: 0; visibility: hidden; display: none;
             }
+            
             #main-sidebar:hover .nav-text, #main-sidebar:hover .logo-full, #main-sidebar:hover .menu-header {
-                opacity: 1; display: flex;
+                opacity: 1; visibility: visible; display: flex; 
             }
-            #main-sidebar .icon-collapsed { display: flex; }
-            #main-sidebar:hover .icon-collapsed { display: none; }
-            #main-sidebar .nav-item { justify-content: center; }
-            #main-sidebar:hover .nav-item { justify-content: flex-start; }
+
+            #main-sidebar:hover .menu-header { display: block; }
+
+            #main-sidebar .nav-item { 
+                justify-content: center; 
+                height: 56px;
+                margin-bottom: 4px;
+            }
+
+            #main-sidebar:hover .nav-item { 
+                justify-content: flex-start; 
+                padding-left: 2rem;
+                width: 100%;
+            }
         }
 
         @media (max-width: 1024px) {
             #main-sidebar { position: fixed; left: -100%; width: 280px; }
             #main-sidebar.show-sidebar { left: 0; }
-            #main-sidebar .nav-text, #main-sidebar .logo-full { display: flex; opacity: 1; }
+            #main-sidebar .nav-text, #main-sidebar .logo-full, #main-sidebar .menu-header { display: flex; opacity: 1; visibility: visible; }
             #main-sidebar .icon-collapsed { display: none; }
+            #main-sidebar .nav-item { width: 100%; justify-content: flex-start; padding-left: 2rem; height: 56px; }
         }
 
-        .swal2-popup { border-radius: 2rem !important; padding: 2rem !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
     </style>
 </head>
-<body class="antialiased text-slate-800 bg-[#f0f9f4] dark:bg-[#06201b] dark:text-emerald-50 transition-colors duration-300">
+<body class="antialiased text-slate-800 bg-[#f8fafc] dark:bg-[#020d0b] dark:text-emerald-50 transition-colors duration-300">
 
-    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/40 z-30 hidden backdrop-blur-sm"></div>
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/60 z-30 hidden backdrop-blur-sm transition-opacity"></div>
 
     <div class="flex min-h-screen relative overflow-hidden">
         
-        <!-- SIDEBAR -->
-        <aside id="main-sidebar" class="bg-emerald-primary dark:bg-emerald-900 h-screen text-white flex flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
+        <!-- SIDEBAR (Emerald Dark SOWAN V2 Style - WARNA DIPERBAIKI) -->
+        <aside id="main-sidebar" class="bg-[#065f46] h-screen text-white flex flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
             
             <!-- Logo Section -->
-            <div class="p-6 h-24 flex items-center border-b border-white/10 shrink-0">
-                <div class="logo-full items-center gap-3">
-                    <div class="bg-white p-2 rounded-xl shadow-lg shrink-0">
+            <div class="p-6 h-24 flex items-center shrink-0 border-b border-white/5">
+                <div class="logo-full flex items-center gap-3">
+                    <div class="bg-white p-2 rounded-xl shadow-lg shrink-0 flex items-center justify-center">
                         <i class="fas fa-hand-holding-heart text-emerald-primary text-lg"></i>
                     </div>
-                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">Sistem<br><span class="text-emerald-300 text-xs text-nowrap font-bold tracking-widest">Aplikasi SEDEKAH</span></span>
+                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none text-white">Sistem<br><span class="text-emerald-400 text-[9px] font-black tracking-[0.3em]">APLIKASI SEDEKAH</span></span>
                 </div>
 
-                <div class="icon-collapsed w-full justify-center">
-                    <div class="bg-white p-3 rounded-2xl shadow-xl border-4 border-emerald-400/30 text-center">
+                <div class="icon-collapsed w-full flex justify-center group-hover:hidden">
+                    <div class="bg-white p-3 rounded-2xl shadow-xl text-center flex items-center justify-center">
                         <i class="fas fa-hand-holding-heart text-emerald-primary text-2xl"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Navigation Section -->
-            <nav class="flex-1 px-4 mt-6 overflow-y-auto custom-scrollbar space-y-2">
+            <nav class="flex-1 mt-8 overflow-y-auto custom-scrollbar">
                 
                 @if(Auth::user()->role == 'administrator')
-                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Operasional Admin</div>
+                    <div class="menu-header px-8 py-3 text-[10px] font-black text-white/30 uppercase tracking-[0.25em]">Operasional Admin</div>
                     
-                    <a href="{{ route('admin.dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('admin.dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-desktop w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Dashboard Operasional</span>
-                    </a>
-
-                    <!-- Menggunakan # karena view belum ada -->
-                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
-                        <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Verifikasi Donasi</span>
-                    </a>
-
-                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
-                        <i class="fas fa-list-ul w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Kelola Riwayat</span>
-                    </a>
-
-                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
-                        <i class="fas fa-address-book w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Donatur</span>
-                    </a>
-
-                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
-                        <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring Audit Log</span>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Dashboard Operasional</span>
                     </a>
                 @endif
 
                 @if(Auth::user()->role == 'direktur')
-                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Panel Eksekutif</div>
+                    <div class="menu-header px-8 py-3 text-[10px] font-black text-white/30 uppercase tracking-[0.25em]">Panel Eksekutif</div>
 
-                    <a href="{{ route('direktur.dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ request()->routeIs('direktur.dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <a href="{{ route('direktur.dashboard') }}" class="nav-item {{ request()->routeIs('direktur.dashboard') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-chart-pie w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Dashboard Eksekutif</span>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Dashboard Eksekutif</span>
                     </a>
 
-                    <!-- Menggunakan # karena view belum ada -->
-                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
+                    <a href="{{ route('direktur.riwayat_donatur') }}" class="nav-item {{ request()->routeIs('direktur.riwayat_donatur') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-user-shield w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring Donatur</span>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Monitoring Donatur</span>
                     </a>
 
-                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
+                    <a href="{{ route('direktur.laporan') }}" class="nav-item {{ request()->routeIs('direktur.laporan') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-file-invoice-dollar w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Donasi & Keuangan</span>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Keuangan</span>
                     </a>
 
-                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
+                    <a href="{{ route('direktur.logistik') }}" class="nav-item {{ request()->routeIs('direktur.logistik') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-boxes w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Logistik</span>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Logistik</span>
                     </a>
 
-                    <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10 opacity-60">
+                    <a href="{{ route('direktur.manajemen_user.index') }}" class="nav-item {{ request()->routeIs('direktur.manajemen_user.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-user-cog w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen User</span>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Manajemen User</span>
                     </a>
                 @endif
                 
             </nav>
 
-            <!-- Bottom Action -->
-            <div class="p-4 mb-4">
+            <!-- Bottom Action Logout -->
+            <div class="p-4 mb-4 shrink-0">
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">@csrf</form>
                 <button onclick="confirmLogout(event)" 
-                    class="nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 hover:shadow-lg text-red-100 transition-all border border-white/5 group">
-                    <i class="fas fa-power-off w-6 text-center group-hover:scale-110 text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Logout</span>
+                    class="nav-item w-full h-12 flex items-center justify-center lg:group-hover:justify-start lg:group-hover:px-8 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all">
+                    <i class="fas fa-power-off w-6 text-center text-sm"></i>
+                    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Keluar Sistem</span>
                 </button>
             </div>
         </aside>
 
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-            <!-- Header/Navbar -->
-            <header class="h-20 bg-white dark:bg-emerald-900 border-b border-emerald-50 dark:border-emerald-800 shadow-sm flex justify-between items-center px-8 z-20 shrink-0 transition-colors duration-300">
+            <!-- Header/Navbar Clean SOWAN V2 Style -->
+            <header class="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex justify-between items-center px-8 z-20 shrink-0 transition-all">
                 <div class="flex items-center gap-4">
-                    <button onclick="toggleMobileSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-800 text-emerald-primary">
+                    <button onclick="toggleMobileSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-primary active:scale-90 transition-transform">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <div class="flex flex-col leading-none">
-                        <h2 class="text-slate-800 dark:text-white font-black text-xl tracking-tighter uppercase italic">@yield('page_title', 'Dashboard')</h2>
-                        <p class="text-[9px] font-bold text-slate-400 dark:text-emerald-400/60 uppercase tracking-[0.25em] mt-1.5 hidden sm:block">Aplikasi SEDEKAH • DNA Project</p>
+                    <div class="flex flex-col">
+                        <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.3em] italic leading-none mb-1">DNA PROJECT</p>
+                        <h2 class="text-slate-800 dark:text-white font-black text-xl tracking-tighter uppercase italic">
+                            @yield('page_title', 'Dashboard')
+                        </h2>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <!-- Dark Mode Toggle -->
-                    <button @click="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-emerald-800 text-slate-500 dark:text-yellow-400 border border-slate-100 dark:border-emerald-700 transition-all hover:scale-110">
-                        <i x-show="darkMode" class="fa-solid fa-sun text-lg" x-cloak></i>
-                        <i x-show="!darkMode" class="fa-solid fa-moon text-lg" x-cloak></i>
+                <div class="flex items-center gap-6">
+                    <button @click="toggleTheme()" class="text-slate-400 hover:text-emerald-500 transition-colors">
+                        <i x-show="darkMode" class="fa-solid fa-sun text-lg"></i>
+                        <i x-show="!darkMode" class="fa-solid fa-moon text-lg"></i>
                     </button>
 
-                    <div class="flex items-center gap-4 bg-slate-50 dark:bg-emerald-800/50 py-1.5 pl-4 pr-1.5 rounded-2xl border border-slate-100 dark:border-emerald-700">
-                        <div class="text-right leading-tight hidden md:block">
-                            <p class="text-xs font-black text-slate-800 dark:text-emerald-50 uppercase tracking-tighter">{{ Auth::user()->nama_user }}</p>
-                            <div class="flex items-center justify-end gap-1.5 mt-0.5">
-                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-lg"></span>
-                                <p class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest italic leading-none">{{ strtoupper(Auth::user()->role) }}</p>
-                            </div>
+                    <div class="flex items-center gap-3 pl-6 border-l border-slate-100 dark:border-slate-800">
+                        <div class="text-right hidden sm:block leading-tight">
+                            <p class="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-tight">{{ Auth::user()->nama_user }}</p>
+                            <p class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest italic">{{ Auth::user()->role }}</p>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->nama_user) }}&background=008f5d&color=fff&bold=true" class="w-10 h-10 rounded-xl border-2 border-white dark:border-emerald-700 shadow-sm">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->nama_user) }}&background=008f5d&color=fff&bold=true" class="w-10 h-10 rounded-xl border-2 border-white dark:border-slate-700 shadow-md">
                     </div>
                 </div>
             </header>
 
             <!-- Page Content -->
-            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#f8fafc] dark:bg-[#041a16]">
+            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-[#f8fafc] dark:bg-[#041a16] transition-colors duration-300">
                 <div class="max-w-7xl mx-auto">
                     @yield('content')
                 </div>
@@ -232,24 +244,32 @@
 
     <script>
         function toggleMobileSidebar() {
-            document.getElementById('main-sidebar').classList.toggle('show-sidebar');
-            document.getElementById('sidebar-overlay').classList.toggle('hidden');
+            const sidebar = document.getElementById('main-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('show-sidebar');
+            overlay.classList.toggle('hidden');
         }
 
         function confirmLogout(event) {
             event.preventDefault();
+            const isDark = document.documentElement.classList.contains('dark');
             Swal.fire({
-                title: 'Yakin keluar?',
-                text: "Sesi Anda akan segera diakhiri.",
-                icon: 'warning',
+                title: 'KELUAR SISTEM?',
+                text: "Sesi Anda akan segera berakhir.",
+                icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#008f5d',
-                cancelButtonColor: '#f1f5f9',
+                cancelButtonColor: isDark ? '#334155' : '#f1f5f9',
                 confirmButtonText: 'YA, KELUAR',
                 cancelButtonText: 'BATAL',
                 reverseButtons: true,
-                background: document.documentElement.classList.contains('dark') ? '#064e3b' : '#fff',
-                color: document.documentElement.classList.contains('dark') ? '#ecfdf5' : '#1e293b',
+                background: isDark ? '#1e293b' : '#ffffff',
+                color: isDark ? '#f1f5f9' : '#1e293b',
+                customClass: {
+                    popup: 'rounded-[2.5rem]',
+                    confirmButton: 'rounded-2xl font-black text-[10px] tracking-widest px-8 py-3',
+                    cancelButton: 'rounded-2xl font-black text-[10px] tracking-widest px-8 py-3 text-slate-500'
+                }
             }).then((result) => {
                 if (result.isConfirmed) { document.getElementById('logout-form').submit(); }
             });

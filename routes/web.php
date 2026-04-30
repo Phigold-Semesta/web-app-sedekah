@@ -9,7 +9,6 @@ use App\Http\Controllers\DirekturController;
 |--------------------------------------------------------------------------
 | Web Routes - SOWAN v2 (Project SEDEKAH)
 |--------------------------------------------------------------------------
-| Desain: Modern, Bold, & Luxurious (Emerald Theme)
 */
 
 Route::get('/', function () {
@@ -33,13 +32,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', function () {
         $role = auth()->user()->role;
-
         if ($role === 'administrator') {
             return redirect()->route('admin.dashboard');
         } elseif ($role === 'direktur') {
             return redirect()->route('direktur.dashboard');
         }
-
         return redirect('/')->with('error', 'Role tidak dikenali oleh sistem.');
     })->name('dashboard');
 
@@ -54,14 +51,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/audit', [AdminController::class, 'audit'])->name('audit');
     });
 
-    // --- GRUP RUTE DIREKTUR (DISEMPURNAKAN) ---
+    // --- GRUP RUTE DIREKTUR ---
     Route::prefix('direktur')->name('direktur.')->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'index'])->name('dashboard');
-        
-        // Menambahkan rute agar sesuai dengan sidebar di app.blade.php
         Route::get('/monitoring-donatur', [DirekturController::class, 'riwayat_donatur'])->name('riwayat_donatur');
         Route::get('/laporan-keuangan', [DirekturController::class, 'laporan'])->name('laporan');
         Route::get('/monitoring-logistik', [DirekturController::class, 'logistik'])->name('logistik');
         Route::get('/audit-system', [DirekturController::class, 'audit'])->name('audit');
+
+        // --- MANAJEMEN USER ---
+        Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
+            Route::get('/', [DirekturController::class, 'user_index'])->name('index');
+            Route::get('/create', [DirekturController::class, 'user_create'])->name('create');
+            Route::post('/', [DirekturController::class, 'user_store'])->name('store');
+            Route::get('/{id}', [DirekturController::class, 'user_show'])->name('show');
+            Route::get('/{id}/edit', [DirekturController::class, 'user_edit'])->name('edit');
+            Route::put('/{id}', [DirekturController::class, 'user_update'])->name('update');
+            Route::delete('/{id}', [DirekturController::class, 'user_destroy'])->name('destroy');
+        });
     });
 });
