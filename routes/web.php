@@ -7,8 +7,10 @@ use App\Http\Controllers\DirekturController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - SOWAN v2 (Project SEDEKAH)
+| Web Routes - Project SEDEKAH (SOWAN v2)
 |--------------------------------------------------------------------------
+| Seluruh rute diatur secara eksplisit untuk mendukung sistem autentikasi 
+| manual dan manajemen logistik inventaris yayasan.
 */
 
 Route::get('/', function () {
@@ -25,14 +27,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
 });
 
+// Pastikan logout hanya bisa diakses user yang sudah login
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // --- AKSES INTERNAL TERPROTEKSI ---
 Route::middleware(['auth'])->group(function () {
 
+    // Logic pengalihan dashboard berdasarkan role
     Route::get('/dashboard', function () {
         $role = auth()->user()->role;
-        if ($role === 'administrator') {
+        if ($role === 'administrator' || $role === 'admin') { // Penyesuaian pengecekan role admin
             return redirect()->route('admin.dashboard');
         } elseif ($role === 'direktur') {
             return redirect()->route('direktur.dashboard');
@@ -56,18 +60,27 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'index'])->name('dashboard');
         Route::get('/monitoring-donatur', [DirekturController::class, 'riwayat_donatur'])->name('riwayat_donatur');
         Route::get('/laporan-keuangan', [DirekturController::class, 'laporan'])->name('laporan');
-        Route::get('/monitoring-logistik', [DirekturController::class, 'logistik'])->name('logistik');
+        
+        // --- PENYEMPURNAAN RUTE LOGISTIK (PROJECT SEDEKAH) ---
+        Route::prefix('monitoring-logistik')->name('logistik.')->group(function () {
+            // Rute ini sekarang menerima Request untuk filter di Controller
+            Route::get('/', [DirekturController::class, 'logistik'])->name('index'); 
+            
+            // Rute export mendukung format Excel & PDF via query string (?format=pdf)
+            Route::get('/export', [DirekturController::class, 'export_donasi_barang'])->name('export');
+        });
+
         Route::get('/audit-system', [DirekturController::class, 'audit'])->name('audit');
 
-        // --- MANAJEMEN USER ---
+        // --- MANAJEMEN USER (DIREKTUR ONLY) ---
         Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
             Route::get('/', [DirekturController::class, 'user_index'])->name('index');
             Route::get('/create', [DirekturController::class, 'user_create'])->name('create');
-            Route::post('/', [DirekturController::class, 'user_store'])->name('store');
-            Route::get('/{id}', [DirekturController::class, 'user_show'])->name('show');
-            Route::get('/{id}/edit', [DirekturController::class, 'user_edit'])->name('edit');
-            Route::put('/{id}', [DirekturController::class, 'user_update'])->name('update');
-            Route::delete('/{id}', [DirekturController::class, 'user_destroy'])->name('destroy');
+            Route::post('/store', [DirekturController::class, 'user_store'])->name('store');
+            Route::get('/show/{id}', [DirekturController::class, 'user_show'])->name('show');
+            Route::get('/edit/{id}', [DirekturController::class, 'user_edit'])->name('edit');
+            Route::put('/update/{id}', [DirekturController::class, 'user_update'])->name('update');
+            Route::delete('/destroy/{id}', [DirekturController::class, 'user_destroy'])->name('destroy');
         });
     });
 });

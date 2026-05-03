@@ -34,7 +34,7 @@
                 extend: {
                     colors: {
                         'emerald-primary': '#008f5d',
-                        'emerald-dark': '#065f46', /* Diperhalus agar tidak terlalu gelap */
+                        'emerald-dark': '#065f46',
                         'gold-accent': '#FFF200',
                     }
                 }
@@ -46,7 +46,6 @@
         [x-cloak] { display: none !important; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         
-        /* SIDEBAR SOWAN V2 CORE STYLE */
         #main-sidebar {
             width: 88px; 
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,18 +59,15 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
-        /* Indikator Aktif SOWAN V2 (Garis Kuning) */
         .sidebar-active {
             color: #ffffff !important;
             font-weight: 800;
         }
 
-        /* Hanya tampilkan gelembung transparan saat sidebar di-hover (lebar) */
         #main-sidebar:hover .sidebar-active {
             background-color: rgba(255, 255, 255, 0.1);
         }
 
-        /* Indikator Garis Samping Kuning */
         .sidebar-active::before {
             content: '';
             position: absolute;
@@ -128,7 +124,7 @@
 
     <div class="flex min-h-screen relative overflow-hidden">
         
-        <!-- SIDEBAR (Emerald Dark SOWAN V2 Style - WARNA DIPERBAIKI) -->
+        <!-- SIDEBAR -->
         <aside id="main-sidebar" class="bg-[#065f46] h-screen text-white flex flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
             
             <!-- Logo Section -->
@@ -177,14 +173,21 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Keuangan</span>
                     </a>
 
-                    <a href="{{ route('direktur.logistik') }}" class="nav-item {{ request()->routeIs('direktur.logistik') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-                        <i class="fas fa-boxes w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Logistik</span>
-                    </a>
+                   <!-- PERBAIKAN: Route Laporan Logistik sesuai web.php terbaru -->
+<a href="{{ route('direktur.logistik.index') }}" 
+   class="nav-item {{ request()->routeIs('direktur.logistik.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-boxes w-6 text-center text-sm"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Logistik</span>
+</a>
 
                     <a href="{{ route('direktur.manajemen_user.index') }}" class="nav-item {{ request()->routeIs('direktur.manajemen_user.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-user-cog w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Manajemen User</span>
+                    </a>
+
+                    <a href="{{ route('direktur.audit') }}" class="nav-item {{ request()->routeIs('direktur.audit') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-shield-alt w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Audit System</span>
                     </a>
                 @endif
                 
@@ -203,7 +206,6 @@
 
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-            <!-- Header/Navbar Clean SOWAN V2 Style -->
             <header class="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex justify-between items-center px-8 z-20 shrink-0 transition-all">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleMobileSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-primary active:scale-90 transition-transform">
@@ -233,7 +235,6 @@
                 </div>
             </header>
 
-            <!-- Page Content -->
             <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-[#f8fafc] dark:bg-[#041a16] transition-colors duration-300">
                 <div class="max-w-7xl mx-auto">
                     @yield('content')

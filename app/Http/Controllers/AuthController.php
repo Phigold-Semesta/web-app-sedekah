@@ -57,7 +57,7 @@ class AuthController extends Controller
         // 4. Jika gagal, kembalikan dengan pesan error
         return Redirect::back()
             ->withErrors([
-                'username' => 'Kredensial yang Bos masukkan tidak terdaftar di sistem kami.',
+                'username' => 'Kredensial yang anda masukkan tidak terdaftar di sistem kami.',
             ])
             ->withInput($request->only('username'));
     }
