@@ -59,9 +59,20 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('direktur')->name('direktur.')->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'index'])->name('dashboard');
         Route::get('/monitoring-donatur', [DirekturController::class, 'riwayat_donatur'])->name('riwayat_donatur');
-        Route::get('/laporan-keuangan', [DirekturController::class, 'laporan'])->name('laporan');
         
-        // --- PENYEMPURNAAN RUTE LOGISTIK (PROJECT SEDEKAH) ---
+        // --- PENYEMPURNAAN RUTE KEUANGAN (MODEL: DonasiUang) ---
+        Route::prefix('monitoring-keuangan')->name('keuangan.')->group(function () {
+            // Menampilkan list transaksi uang dengan filter
+            Route::get('/', [DirekturController::class, 'keuangan'])->name('index'); 
+            
+            // Rute export mendukung format Excel & PDF untuk keuangan
+            Route::get('/export', [DirekturController::class, 'export_donasi_uang'])->name('export');
+        });
+
+        // Tetap mempertahankan rute laporan general jika masih dibutuhkan
+        Route::get('/laporan-umum', [DirekturController::class, 'laporan'])->name('laporan');
+        
+        // --- PENYEMPURNAAN RUTE LOGISTIK (MODEL: DonasiBarang) ---
         Route::prefix('monitoring-logistik')->name('logistik.')->group(function () {
             // Rute ini sekarang menerima Request untuk filter di Controller
             Route::get('/', [DirekturController::class, 'logistik'])->name('index'); 

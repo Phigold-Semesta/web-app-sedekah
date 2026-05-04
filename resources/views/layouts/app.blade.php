@@ -168,10 +168,11 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Monitoring Donatur</span>
                     </a>
 
-                    <a href="{{ route('direktur.laporan') }}" class="nav-item {{ request()->routeIs('direktur.laporan') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-                        <i class="fas fa-file-invoice-dollar w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Keuangan</span>
-                    </a>
+                    <a href="{{ route('direktur.keuangan.index') }}" 
+   class="nav-item {{ request()->routeIs('direktur.keuangan.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-file-invoice-dollar w-6 text-center text-sm"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Keuangan</span>
+</a>
 
                    <!-- PERBAIKAN: Route Laporan Logistik sesuai web.php terbaru -->
 <a href="{{ route('direktur.logistik.index') }}" 
