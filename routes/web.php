@@ -13,6 +13,7 @@ use App\Http\Controllers\DirekturController;
 | manual dan manajemen logistik inventaris yayasan.
 */
 
+// --- PENGALIHAN AWAL ---
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -27,24 +28,29 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
 });
 
-// Pastikan logout hanya bisa diakses user yang sudah login
+// Logout harus melalui middleware auth agar secure
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // --- AKSES INTERNAL TERPROTEKSI ---
 Route::middleware(['auth'])->group(function () {
 
-    // Logic pengalihan dashboard berdasarkan role
+    /**
+     * Logic pengalihan dashboard berdasarkan role.
+     * Menggunakan pengecekan yang lebih fleksibel untuk 'admin' atau 'administrator'.
+     */
     Route::get('/dashboard', function () {
         $role = auth()->user()->role;
-        if ($role === 'administrator' || $role === 'admin') { // Penyesuaian pengecekan role admin
+        
+        if (in_array($role, ['admin', 'administrator', 'petugas'])) { 
             return redirect()->route('admin.dashboard');
         } elseif ($role === 'direktur') {
             return redirect()->route('direktur.dashboard');
         }
+        
         return redirect('/')->with('error', 'Role tidak dikenali oleh sistem.');
     })->name('dashboard');
 
-    // --- GRUP RUTE ADMINISTRATOR ---
+    // --- GRUP RUTE ADMINISTRATOR / PETUGAS ---
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
         Route::get('/verifikasi', [AdminController::class, 'verifikasi'])->name('verifikasi');
@@ -56,34 +62,30 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // --- GRUP RUTE DIREKTUR ---
+    // Diproteksi tambahan jika ingin lebih ketat (Opsional: middleware:role:direktur)
     Route::prefix('direktur')->name('direktur.')->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'index'])->name('dashboard');
         Route::get('/monitoring-donatur', [DirekturController::class, 'riwayat_donatur'])->name('riwayat_donatur');
         
         // --- PENYEMPURNAAN RUTE KEUANGAN (MODEL: DonasiUang) ---
         Route::prefix('monitoring-keuangan')->name('keuangan.')->group(function () {
-            // Menampilkan list transaksi uang dengan filter
             Route::get('/', [DirekturController::class, 'keuangan'])->name('index'); 
-            
-            // Rute export mendukung format Excel & PDF untuk keuangan
             Route::get('/export', [DirekturController::class, 'export_donasi_uang'])->name('export');
         });
 
-        // Tetap mempertahankan rute laporan general jika masih dibutuhkan
-        Route::get('/laporan-umum', [DirekturController::class, 'laporan'])->name('laporan');
-        
         // --- PENYEMPURNAAN RUTE LOGISTIK (MODEL: DonasiBarang) ---
         Route::prefix('monitoring-logistik')->name('logistik.')->group(function () {
-            // Rute ini sekarang menerima Request untuk filter di Controller
             Route::get('/', [DirekturController::class, 'logistik'])->name('index'); 
-            
-            // Rute export mendukung format Excel & PDF via query string (?format=pdf)
             Route::get('/export', [DirekturController::class, 'export_donasi_barang'])->name('export');
         });
 
+        // Rute Audit System (AuditLog)
         Route::get('/audit-system', [DirekturController::class, 'audit'])->name('audit');
+        
+        // Rute Laporan Umum (Tetap dipertahankan)
+        Route::get('/laporan-umum', [DirekturController::class, 'laporan'])->name('laporan');
 
-        // --- MANAJEMEN USER (DIREKTUR ONLY) ---
+        // --- MANAJEMEN USER (EKSLUSIF DIREKTUR) ---
         Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
             Route::get('/', [DirekturController::class, 'user_index'])->name('index');
             Route::get('/create', [DirekturController::class, 'user_create'])->name('create');

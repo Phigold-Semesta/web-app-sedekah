@@ -21,5 +21,10 @@ class DatabaseSeeder extends Seeder
             // Jika nanti ada seeder lain (misal: AuditLogSeeder), tinggal tambah di sini
         ]);
 
+        $this->call([
+        // Seeder lainnya...
+        AuditLogSeeder::class,
+    ]);
+
     }
 }

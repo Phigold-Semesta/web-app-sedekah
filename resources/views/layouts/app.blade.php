@@ -186,10 +186,13 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Manajemen User</span>
                     </a>
 
-                    <a href="{{ route('direktur.audit') }}" class="nav-item {{ request()->routeIs('direktur.audit') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-                        <i class="fas fa-shield-alt w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Audit System</span>
-                    </a>
+                  <a href="{{ route('direktur.audit') }}" 
+   class="nav-item {{ request()->routeIs('direktur.audit') ? 'sidebar-active bg-white/10 text-white' : 'hover:text-white hover:bg-white/5' }} flex items-center px-4 py-3 transition-all duration-200">
+    <i class="fas fa-shield-alt w-6 text-center text-sm {{ request()->routeIs('direktur.audit') ? 'text-emerald-400' : '' }}"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">
+        Audit Log
+    </span>
+</a>
                 @endif
                 
             </nav>

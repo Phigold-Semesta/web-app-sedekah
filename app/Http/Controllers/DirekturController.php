@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User; 
-use App\Models\DonasiBarang; // Import Model DonasiBarang untuk project SEDEKAH
-use App\Models\DonasiUang;   // Import Model DonasiUang sesuai ERD
-use App\Exports\DonasiBarangExport; // Import Class Export Excel Logistik
-use App\Exports\DonasiUangExport;   // Import Class Export Excel Keuangan (Pastikan file ini sudah dibuat)
-use Maatwebsite\Excel\Facades\Excel; // Import Facade Excel
-use Barryvdh\DomPDF\Facade\Pdf; // Import Facade PDF
+use App\Models\DonasiBarang; 
+use App\Models\DonasiUang;   
+use App\Models\AuditLog; // Import Model AuditLog untuk Audit System
+use App\Exports\DonasiBarangExport; 
+use App\Exports\DonasiUangExport;   
+use Maatwebsite\Excel\Facades\Excel; 
+use Barryvdh\DomPDF\Facade\Pdf; 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -22,7 +23,6 @@ class DirekturController extends Controller
      */
     public function index()
     {
-        // Data statistik disesuaikan untuk Project SEDEKAH
         $data = [
             'totalAsetYayasan'    => 1250000000, 
             'totalDonasiTahunIni' => 450000000,
@@ -197,7 +197,6 @@ class DirekturController extends Controller
         $tgl_hari = $request->input('tgl_hari');
         $perPage = $request->input('per_page', 10);
 
-        // Berdasarkan erdplus (2)_3.png, Donasi_Uang memiliki nominal dan order_id
         $query = DonasiUang::orderBy('created_at', 'desc');
 
         if ($search) {
@@ -245,5 +244,28 @@ class DirekturController extends Controller
         return view('direktur.logistik.index', compact('logistik_list'));
     }
 
-    public function audit() { return view('direktur.audit.index'); }
+    /**
+     * MENYEMPURNAKAN: Menu Audit System menggunakan Model AuditLog
+     */
+    public function audit(Request $request)
+    {
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        // Mengambil riwayat log dengan relasi user sesuai model yang sudah dibuat
+        $query = AuditLog::with('user')->orderBy('waktu_log', 'desc');
+
+        if ($search) {
+            $query->where('aksi_log', 'like', "%{$search}%");
+        }
+
+        if ($perPage === 'all') {
+            $audit_list = $query->get();
+        } else {
+            $audit_list = $query->paginate($perPage)->withQueryString();
+        }
+
+        // Folder view disesuaikan dengan screenshot: direktur/audit_log/index.blade.php
+        return view('direktur.audit_log.index', compact('audit_list'));
+    }
 }
