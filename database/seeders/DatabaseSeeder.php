@@ -26,5 +26,9 @@ class DatabaseSeeder extends Seeder
         AuditLogSeeder::class,
     ]);
 
+          $this->call([
+        // Seeder lainnya...
+        DonaturSeeder::class,
+    ]);
     }
 }
