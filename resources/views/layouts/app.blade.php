@@ -62,9 +62,6 @@
         .sidebar-active {
             color: #ffffff !important;
             font-weight: 800;
-        }
-
-        #main-sidebar:hover .sidebar-active {
             background-color: rgba(255, 255, 255, 0.1);
         }
 
@@ -124,10 +121,8 @@
 
     <div class="flex min-h-screen relative overflow-hidden">
         
-        <!-- SIDEBAR -->
         <aside id="main-sidebar" class="bg-[#065f46] h-screen text-white flex flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
             
-            <!-- Logo Section -->
             <div class="p-6 h-24 flex items-center shrink-0 border-b border-white/5">
                 <div class="logo-full flex items-center gap-3">
                     <div class="bg-white p-2 rounded-xl shadow-lg shrink-0 flex items-center justify-center">
@@ -143,7 +138,6 @@
                 </div>
             </div>
 
-            <!-- Navigation Section -->
             <nav class="flex-1 mt-8 overflow-y-auto custom-scrollbar">
                 
                 @if(Auth::user()->role == 'administrator')
@@ -163,41 +157,38 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Dashboard Eksekutif</span>
                     </a>
 
-                    <a href="{{ route('direktur.riwayat_donatur') }}" class="nav-item {{ request()->routeIs('direktur.riwayat_donatur') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                    {{-- PERBAIKAN: Menambahkan .index dan .* untuk konsistensi route monitoring --}}
+                    <a href="{{ route('direktur.riwayat_donatur.index') }}" class="nav-item {{ request()->routeIs('direktur.riwayat_donatur.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-user-shield w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Monitoring Donatur</span>
                     </a>
 
                     <a href="{{ route('direktur.keuangan.index') }}" 
-   class="nav-item {{ request()->routeIs('direktur.keuangan.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-    <i class="fas fa-file-invoice-dollar w-6 text-center text-sm"></i>
-    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Keuangan</span>
-</a>
+                       class="nav-item {{ request()->routeIs('direktur.keuangan.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-file-invoice-dollar w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Keuangan</span>
+                    </a>
 
-                   <!-- PERBAIKAN: Route Laporan Logistik sesuai web.php terbaru -->
-<a href="{{ route('direktur.logistik.index') }}" 
-   class="nav-item {{ request()->routeIs('direktur.logistik.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-    <i class="fas fa-boxes w-6 text-center text-sm"></i>
-    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Logistik</span>
-</a>
+                    <a href="{{ route('direktur.logistik.index') }}" 
+                       class="nav-item {{ request()->routeIs('direktur.logistik.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-boxes w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Laporan Logistik</span>
+                    </a>
 
                     <a href="{{ route('direktur.manajemen_user.index') }}" class="nav-item {{ request()->routeIs('direktur.manajemen_user.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-user-cog w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Manajemen User</span>
                     </a>
 
-                  <a href="{{ route('direktur.audit') }}" 
-   class="nav-item {{ request()->routeIs('direktur.audit') ? 'sidebar-active bg-white/10 text-white' : 'hover:text-white hover:bg-white/5' }} flex items-center px-4 py-3 transition-all duration-200">
-    <i class="fas fa-shield-alt w-6 text-center text-sm {{ request()->routeIs('direktur.audit') ? 'text-emerald-400' : '' }}"></i>
-    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">
-        Audit Log
-    </span>
-</a>
+                    <a href="{{ route('direktur.audit') }}" 
+                       class="nav-item {{ request()->routeIs('direktur.audit') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-shield-alt w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Audit Log</span>
+                    </a>
                 @endif
                 
             </nav>
 
-            <!-- Bottom Action Logout -->
             <div class="p-4 mb-4 shrink-0">
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">@csrf</form>
                 <button onclick="confirmLogout(event)" 
@@ -208,7 +199,6 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT AREA -->
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
             <header class="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex justify-between items-center px-8 z-20 shrink-0 transition-all">
                 <div class="flex items-center gap-4">

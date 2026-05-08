@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User; 
+use App\Models\Donatur; 
 use App\Models\DonasiBarang; 
 use App\Models\DonasiUang;   
-use App\Models\AuditLog; // Import Model AuditLog untuk Audit System
+use App\Models\AuditLog; 
+use App\Models\Kunjungan; 
 use App\Exports\DonasiBarangExport; 
-use App\Exports\DonasiUangExport;   
+use App\Exports\DonasiUangExport;    
 use Maatwebsite\Excel\Facades\Excel; 
 use Barryvdh\DomPDF\Facade\Pdf; 
 use Illuminate\Support\Facades\Hash;
@@ -23,6 +25,7 @@ class DirekturController extends Controller
      */
     public function index()
     {
+        // Data statistik untuk project SEDEKAH
         $data = [
             'totalAsetYayasan'    => 1250000000, 
             'totalDonasiTahunIni' => 450000000,
@@ -38,7 +41,7 @@ class DirekturController extends Controller
     }
 
     /**
-     * Fitur Export Terpadu (Excel & PDF) untuk Logistik Donasi Barang
+     * Fitur Export Terpadu untuk Logistik Donasi Barang
      */
     public function export_donasi_barang(Request $request)
     {
@@ -65,7 +68,7 @@ class DirekturController extends Controller
     }
 
     /**
-     * FITUR BARU: Export Terpadu (Excel & PDF) untuk Laporan Keuangan
+     * Export Terpadu untuk Laporan Keuangan
      */
     public function export_donasi_uang(Request $request)
     {
@@ -90,7 +93,7 @@ class DirekturController extends Controller
     }
 
     /**
-     * Menampilkan daftar user dengan fitur Search, Pagination, dan Filter Baris.
+     * Manajemen User: Index
      */
     public function user_index(Request $request)
     {
@@ -106,19 +109,12 @@ class DirekturController extends Controller
             });
         }
 
-        if ($perPage === 'all') {
-            $user_list = $query->get();
-        } else {
-            $user_list = $query->paginate($perPage)->withQueryString();
-        }
+        $user_list = ($perPage === 'all') ? $query->get() : $query->paginate($perPage)->withQueryString();
 
         return view('direktur.manajemen_user.index', compact('user_list'));
     }
 
-    public function user_create()
-    {
-        return view('direktur.manajemen_user.create');
-    }
+    public function user_create() { return view('direktur.manajemen_user.create'); }
 
     public function user_store(Request $request)
     {
@@ -186,10 +182,82 @@ class DirekturController extends Controller
                          ->with('success', 'User archived.');
     }
 
-    public function riwayat_donatur() { return view('direktur.riwayat_donatur.index'); }
+    /**
+     * DISEMPURNAKAN: Menampilkan Monitoring Donatur (Daftar Riwayat)
+     */
+    public function riwayat_donatur(Request $request) 
+    { 
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        $query = Donatur::query()
+            ->withCount('kunjungan')
+            ->addSelect(['donasi_uang_count' => \App\Models\DonasiUang::selectRaw('count(*)')
+                ->whereIn('id_donasi', function($q) {
+                    $q->select('id_donasi')->from('donasi')
+                      ->whereIn('id_kunjungan', function($sq) {
+                          $sq->select('id_kunjungan')->from('kunjungan')
+                             ->whereColumn('id_donatur', 'donatur.id_donatur');
+                      });
+                })
+            ])
+            ->addSelect(['donasi_barang_count' => \App\Models\DonasiBarang::selectRaw('count(*)')
+                ->whereIn('id_donasi', function($q) {
+                    $q->select('id_donasi')->from('donasi')
+                      ->whereIn('id_kunjungan', function($sq) {
+                          $sq->select('id_kunjungan')->from('kunjungan')
+                             ->whereColumn('id_donatur', 'donatur.id_donatur');
+                      });
+                })
+            ])
+            ->orderBy('created_at', 'desc');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama_donatur', 'like', "%{$search}%")
+                  ->orWhere('no_hp', 'like', "%{$search}%");
+            });
+        }
+
+        $donatur_list = ($perPage === 'all') ? $query->get() : $query->paginate($perPage)->withQueryString();
+
+        return view('direktur.riwayat_donatur.index', compact('donatur_list')); 
+    }
+
+    /**
+     * DISEMPURNAKAN: Menampilkan Detail Profil Donatur Beserta Riwayat Lengkap
+     * Perbaikan: Mengumpulkan data donasi uang dan barang agar bisa diloop di view.
+     */
+    public function donatur_show($id)
+    {
+        // 1. Ambil data donatur dengan relasi mendalam
+        $donatur = Donatur::with([
+            'kunjungan.donasi.donasi_uang', 
+            'kunjungan.donasi.donasi_barang'
+        ])->findOrFail($id);
+
+        // 2. Kita kumpulkan semua riwayat donasi uang dan barang ke dalam Collection tersendiri
+        // Agar di file show.blade.php Anda bisa langsung melakukan @foreach($riwayat_uang as $uang)
+        $riwayat_uang = collect();
+        $riwayat_barang = collect();
+
+        foreach($donatur->kunjungan as $kunjungan) {
+            foreach($kunjungan->donasi as $donasi) {
+                if ($donasi->donasi_uang) {
+                    $riwayat_uang->push($donasi->donasi_uang);
+                }
+                if ($donasi->donasi_barang) {
+                    $riwayat_barang->push($donasi->donasi_barang);
+                }
+            }
+        }
+
+        // 3. Kirim variabel donatur, riwayat_uang, dan riwayat_barang ke view
+        return view('direktur.riwayat_donatur.show', compact('donatur', 'riwayat_uang', 'riwayat_barang'));
+    }
     
     /**
-     * MENYEMPURNAKAN: Menu Laporan Keuangan (DonasiUang)
+     * Menu Laporan Keuangan (DonasiUang)
      */
     public function keuangan(Request $request)
     {
@@ -207,11 +275,7 @@ class DirekturController extends Controller
             $query->whereDate('created_at', $tgl_hari);
         }
 
-        if ($perPage === 'all') {
-            $keuangan_list = $query->get();
-        } else {
-            $keuangan_list = $query->paginate($perPage)->withQueryString();
-        }
+        $keuangan_list = ($perPage === 'all') ? $query->get() : $query->paginate($perPage)->withQueryString();
 
         return view('direktur.keuangan.index', compact('keuangan_list'));
     }
@@ -235,37 +299,35 @@ class DirekturController extends Controller
             $query->whereDate('created_at', $tgl_hari);
         }
 
-        if ($perPage === 'all') {
-            $logistik_list = $query->get();
-        } else {
-            $logistik_list = $query->paginate($perPage)->withQueryString();
-        }
+        $logistik_list = ($perPage === 'all') ? $query->get() : $query->paginate($perPage)->withQueryString();
 
         return view('direktur.logistik.index', compact('logistik_list'));
     }
 
     /**
-     * MENYEMPURNAKAN: Menu Audit System menggunakan Model AuditLog
+     * Menu Audit System menggunakan Model AuditLog
      */
     public function audit(Request $request)
     {
         $search = $request->input('search');
         $perPage = $request->input('per_page', 10);
 
-        // Mengambil riwayat log dengan relasi user sesuai model yang sudah dibuat
         $query = AuditLog::with('user')->orderBy('waktu_log', 'desc');
 
         if ($search) {
             $query->where('aksi_log', 'like', "%{$search}%");
         }
 
-        if ($perPage === 'all') {
-            $audit_list = $query->get();
-        } else {
-            $audit_list = $query->paginate($perPage)->withQueryString();
-        }
+        $audit_list = ($perPage === 'all') ? $query->get() : $query->paginate($perPage)->withQueryString();
 
-        // Folder view disesuaikan dengan screenshot: direktur/audit_log/index.blade.php
         return view('direktur.audit_log.index', compact('audit_list'));
+    }
+
+    /**
+     * Menu Laporan Umum
+     */
+    public function laporan()
+    {
+        return view('direktur.laporan.index');
     }
 }

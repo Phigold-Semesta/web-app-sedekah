@@ -62,10 +62,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // --- GRUP RUTE DIREKTUR ---
-    // Diproteksi tambahan jika ingin lebih ketat (Opsional: middleware:role:direktur)
     Route::prefix('direktur')->name('direktur.')->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'index'])->name('dashboard');
-        Route::get('/monitoring-donatur', [DirekturController::class, 'riwayat_donatur'])->name('riwayat_donatur');
+        
+        // --- PENYEMPURNAAN RUTE MONITORING DONATUR ---
+        // Sinkronisasi: direktur.riwayat_donatur.index & direktur.riwayat_donatur.show
+        Route::prefix('monitoring-donatur')->name('riwayat_donatur.')->group(function () {
+            Route::get('/', [DirekturController::class, 'riwayat_donatur'])->name('index');
+            Route::get('/show/{id}', [DirekturController::class, 'donatur_show'])->name('show');
+        });
         
         // --- PENYEMPURNAAN RUTE KEUANGAN (MODEL: DonasiUang) ---
         Route::prefix('monitoring-keuangan')->name('keuangan.')->group(function () {
@@ -82,7 +87,7 @@ Route::middleware(['auth'])->group(function () {
         // Rute Audit System (AuditLog)
         Route::get('/audit-system', [DirekturController::class, 'audit'])->name('audit');
         
-        // Rute Laporan Umum (Tetap dipertahankan)
+        // Rute Laporan Umum
         Route::get('/laporan-umum', [DirekturController::class, 'laporan'])->name('laporan');
 
         // --- MANAJEMEN USER (EKSLUSIF DIREKTUR) ---
