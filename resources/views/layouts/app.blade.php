@@ -140,12 +140,43 @@
 
             <nav class="flex-1 mt-8 overflow-y-auto custom-scrollbar">
                 
+                {{-- --- PENYEMPURNAAN: MENU LENGKAP AKTOR ADMINISTRATOR (SESUAI USE CASE) --- --}}
                 @if(Auth::user()->role == 'administrator')
                     <div class="menu-header px-8 py-3 text-[10px] font-black text-white/30 uppercase tracking-[0.25em]">Operasional Admin</div>
                     
                     <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-desktop w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Dashboard Operasional</span>
+                    </a>
+
+                    <a href="{{ route('admin.donatur') }}" class="nav-item {{ request()->routeIs('admin.donatur') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-user-friends w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kelola Data Donatur</span>
+                    </a>
+
+                    <a href="{{ route('admin.riwayat') }}" class="nav-item {{ request()->routeIs('admin.riwayat') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-comments w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kunjungan & Feedback</span>
+                    </a>
+
+                    <a href="{{ route('admin.verifikasi') }}" class="nav-item {{ request()->routeIs('admin.verifikasi') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Verifikasi Donasi</span>
+                    </a>
+
+                    <a href="{{ route('admin.kategori') }}" class="nav-item {{ request()->routeIs('admin.kategori') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-tags w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Master Kategori</span>
+                    </a>
+
+                    <a href="{{ route('admin.distribusi') }}" class="nav-item {{ request()->routeIs('admin.distribusi') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-history w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat Kelola Donasi</span>
+                    </a>
+
+                    <a href="{{ route('admin.audit_log.index') }}" class="nav-item {{ request()->routeIs('admin.audit_log.index') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-file-signature w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Audit Log Admin</span>
                     </a>
                 @endif
 
@@ -157,7 +188,6 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Dashboard Eksekutif</span>
                     </a>
 
-                    {{-- PERBAIKAN: Menambahkan .index dan .* untuk konsistensi route monitoring --}}
                     <a href="{{ route('direktur.riwayat_donatur.index') }}" class="nav-item {{ request()->routeIs('direktur.riwayat_donatur.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-user-shield w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Monitoring Donatur</span>

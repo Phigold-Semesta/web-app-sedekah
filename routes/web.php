@@ -7,7 +7,7 @@ use App\Http\Controllers\DirekturController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - Project SEDEKAH (SOWAN v2)
+| Web Routes - Aplikasi SEDEKAH
 |--------------------------------------------------------------------------
 | Seluruh rute diatur secara eksplisit untuk mendukung sistem autentikasi 
 | manual dan manajemen logistik inventaris yayasan.
@@ -58,7 +58,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/riwayat', [AdminController::class, 'riwayat'])->name('riwayat');
         Route::get('/donatur', [AdminController::class, 'donatur'])->name('donatur');
         Route::get('/kategori', [AdminController::class, 'kategori'])->name('kategori');
-        Route::get('/audit', [AdminController::class, 'audit'])->name('audit');
+        
+        // PERBAIKAN: Menyelaraskan name route menjadi 'audit_log.index' agar klop dengan pemanggilan view dan layout sidebar admin
+        Route::get('/audit-log', [AdminController::class, 'audit'])->name('audit_log.index');
     });
 
     // --- GRUP RUTE DIREKTUR ---
