@@ -61,6 +61,18 @@ Route::middleware(['auth'])->group(function () {
         
         // PERBAIKAN: Menyelaraskan name route menjadi 'audit_log.index' agar klop dengan pemanggilan view dan layout sidebar admin
         Route::get('/audit-log', [AdminController::class, 'audit'])->name('audit_log.index');
+
+        // --- TAMBAHAN BARU & PENYEMPURNAAN LENGKAP: RUTE MANAJEMEN USER (AKTOR ADMINISTRATOR) ---
+        // Melengkapi seluruh rute aksi form agar desain halaman CRUD tidak pecah/melompat ke role lain
+        Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
+            Route::get('/', [AdminController::class, 'user_index'])->name('index');
+            Route::get('/create', [AdminController::class, 'user_create'])->name('create');
+            Route::post('/store', [AdminController::class, 'user_store'])->name('store');
+            Route::get('/show/{id}', [AdminController::class, 'user_show'])->name('show');
+            Route::get('/edit/{id}', [AdminController::class, 'user_edit'])->name('edit');
+            Route::put('/update/{id}', [AdminController::class, 'user_update'])->name('update');
+            Route::delete('/destroy/{id}', [AdminController::class, 'user_destroy'])->name('destroy');
+        });
     });
 
     // --- GRUP RUTE DIREKTUR ---
@@ -68,7 +80,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'index'])->name('dashboard');
         
         // --- PENYEMPURNAAN RUTE MONITORING DONATUR ---
-        // Sinkronisasi: direktur.riwayat_donatur.index & direktur.riwayat_donatur.show
         Route::prefix('monitoring-donatur')->name('riwayat_donatur.')->group(function () {
             Route::get('/', [DirekturController::class, 'riwayat_donatur'])->name('index');
             Route::get('/show/{id}', [DirekturController::class, 'donatur_show'])->name('show');

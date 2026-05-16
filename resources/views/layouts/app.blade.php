@@ -140,7 +140,7 @@
 
             <nav class="flex-1 mt-8 overflow-y-auto custom-scrollbar">
                 
-                {{-- --- PENYEMPURNAAN: MENU LENGKAP AKTOR ADMINISTRATOR (SESUAI USE CASE) --- --}}
+                {{-- --- MENU LENGKAP AKTOR ADMINISTRATOR --- --}}
                 @if(Auth::user()->role == 'administrator')
                     <div class="menu-header px-8 py-3 text-[10px] font-black text-white/30 uppercase tracking-[0.25em]">Operasional Admin</div>
                     
@@ -178,8 +178,15 @@
                         <i class="fas fa-file-signature w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Audit Log Admin</span>
                     </a>
+
+                    {{-- --- PENYEMPURNAAN: ROUTE SUDAH MENGGUNAKAN TANDA ASTERISK (*) --- --}}
+                    <a href="{{ route('admin.manajemen_user.index') }}" class="nav-item {{ request()->routeIs('admin.manajemen_user.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-user-cog w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Manajemen User</span>
+                    </a>
                 @endif
 
+                {{-- --- MENU LENGKAP AKTOR DIREKTUR --- --}}
                 @if(Auth::user()->role == 'direktur')
                     <div class="menu-header px-8 py-3 text-[10px] font-black text-white/30 uppercase tracking-[0.25em]">Panel Eksekutif</div>
 
