@@ -179,16 +179,18 @@
                         <i class="fas fa-history w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat Kelola Donasi</span>
                     </a>
+                    
+ <a href="{{ route('admin.manajemen_user.index') }}" class="nav-item {{ request()->routeIs('admin.manajemen_user.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-user-cog w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Manajemen User</span>
+                    </a>
 
                     <a href="{{ route('admin.audit_log.index') }}" class="nav-item {{ request()->routeIs('admin.audit_log.index') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-file-signature w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Audit Log Admin</span>
                     </a>
 
-                    <a href="{{ route('admin.manajemen_user.index') }}" class="nav-item {{ request()->routeIs('admin.manajemen_user.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-                        <i class="fas fa-user-cog w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Manajemen User</span>
-                    </a>
+                   
                 @endif
 
                 {{-- --- MENU LENGKAP AKTOR DIREKTUR --- --}}

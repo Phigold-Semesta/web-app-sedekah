@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen User | SOWAN v2')
+@section('title', 'Manajemen User | SEDEKAH')
 
 @section('content')
 <div class="space-y-8 animate__animated animate__fadeIn">
@@ -74,10 +74,10 @@
         <table class="w-full border-separate border-spacing-y-4">
             <thead>
                 <tr class="text-[#008f5d] dark:text-emerald-400 text-[10px] font-black uppercase tracking-[0.3em] italic">
-                    <th class="px-8 py-2 text-left">Identity</th>
-                    <th class="px-8 py-2 text-left">Credential</th>
-                    <th class="px-8 py-2 text-left">Role Access</th>
-                    <th class="px-8 py-2 text-center">Actions</th>
+                    <th class="px-8 py-2 text-left">Identitas</th>
+                    <th class="px-8 py-2 text-left">Kredensial</th>
+                    <th class="px-8 py-2 text-left">Akses Role</th>
+                    <th class="px-8 py-2 text-center">Tindakan</th>
                 </tr>
             </thead>
             <tbody>
@@ -168,7 +168,7 @@
                             <div class="w-20 h-20 bg-slate-50 dark:bg-slate-900/50 rounded-3xl flex items-center justify-center text-slate-200 dark:text-slate-700 mb-4 border border-slate-100 dark:border-slate-800">
                                 <i class="fas fa-users-slash text-3xl"></i>
                             </div>
-                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">No users found in the system</p>
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Tidak ada pengguna yang ditemukan dalam sistem</p>
                         </div>
                     </td>
                 </tr>
