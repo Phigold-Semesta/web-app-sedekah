@@ -16,6 +16,12 @@
                 <p class="text-white/70 text-xs mt-2 max-w-xl">
                     Kelola, pantau, dan verifikasi profil seluruh donatur yang berkontribusi dalam sistem inventarisasi logistik dan keuangan sedekah.
                 </p>
+                <div class="mt-4">
+                    <a href="{{ route('admin.donatur.create') }}" 
+                       class="inline-flex items-center gap-2 px-5 py-3 bg-white text-[#008f5d] hover:bg-gold-accent hover:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest shadow-md transition-all duration-300 active:scale-95">
+                        <i class="fas fa-plus-circle"></i> Tambah Donatur Manual
+                    </a>
+                </div>
             </div>
             
             <div class="w-full md:w-80">
@@ -40,6 +46,20 @@
                 background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
                 color: document.documentElement.classList.contains('dark') ? '#f1f5f9' : '#1e293b',
                 confirmButtonColor: '#008f5d',
+                customClass: { popup: 'rounded-[2.5rem]' }
+            });
+        </script>
+    @endif
+
+    @if(session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'GAGAL KESALAHAN!',
+                text: "{{ session('error') }}",
+                background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
+                color: document.documentElement.classList.contains('dark') ? '#f1f5f9' : '#1e293b',
+                confirmButtonColor: '#ef4444',
                 customClass: { popup: 'rounded-[2.5rem]' }
             });
         </script>
@@ -89,6 +109,12 @@
                                    class="w-10 h-10 flex items-center justify-center bg-emerald-50 dark:bg-emerald-950/40 text-[#008f5d] hover:bg-[#008f5d] hover:text-white rounded-xl active:scale-95 transition-all shadow-sm"
                                    title="Lihat Profil Lengkap">
                                     <i class="fas fa-eye text-sm"></i>
+                                </a>
+
+                                <a href="{{ route('admin.donatur.edit', $donatur->id_donatur) }}" 
+                                   class="w-10 h-10 flex items-center justify-center bg-amber-50 dark:bg-amber-950/40 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl active:scale-95 transition-all shadow-sm"
+                                   title="Edit Profil Donatur">
+                                    <i class="fas fa-edit text-sm"></i>
                                 </a>
 
                                 <button type="button" 

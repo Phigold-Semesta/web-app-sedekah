@@ -88,11 +88,86 @@ class AdminController extends Controller
     }
 
     /**
+     * Form Tambah Donatur Baru Manual (Create).
+     * SINKRONISASI: Mengarahkan ke form pembuatan entitas donatur baru secara manual.
+     */
+    public function donatur_create(): View
+    {
+        return view('admin.kelola_donatur.create');
+    }
+
+    /**
+     * Process Menyimpan Data Donatur Baru (Store).
+     * SINKRONISASI: Memvalidasi dan menyimpan inputan record donatur baru ke dalam database.
+     */
+    public function donatur_store(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'nama_donatur' => 'required|string|max:255',
+            'no_hp'        => 'nullable|string|max:20',
+            'alamat'       => 'nullable|string',
+        ]);
+
+        Donatur::create([
+            'nama_donatur' => $request->nama_donatur,
+            'no_hp'        => $request->no_hp,
+            'alamat'       => $request->alamat,
+        ]);
+
+        return redirect()->route('admin.donatur.index')->with('success', 'Data entitas donatur baru berhasil disimpan secara manual.');
+    }
+
+    /**
+     * Form Edit Profil Donatur (Edit).
+     * SINKRONISASI: Mengambil entitas tunggal donatur berdasarkan primary key untuk dimuat ke form edit.
+     * PERBAIKAN INTELEPHENSE: Menambahkan Type Hinting string|int pada parameter $id_donatur
+     */
+    public function donatur_edit(string|int $id_donatur): View|RedirectResponse
+    {
+        $donatur = Donatur::where('id_donatur', $id_donatur)->first();
+
+        if (!$donatur) {
+            return redirect()->route('admin.donatur.index')->with('error', 'Data identitas profil donatur tidak ditemukan!');
+        }
+
+        return view('admin.kelola_donatur.edit', compact('donatur'));
+    }
+
+    /**
+     * Process Memperbarui Data Profil Donatur (Update).
+     * SINKRONISASI: Memproses perubahan data profile entitas donatur secara aman dan presisi.
+     * PERBAIKAN INTELEPHENSE: Menambahkan Type Hinting string|int pada parameter $id_donatur
+     */
+    public function donatur_update(Request $request, string|int $id_donatur): RedirectResponse
+    {
+        $donatur = Donatur::where('id_donatur', $id_donatur)->first();
+
+        if (!$donatur) {
+            return redirect()->route('admin.donatur.index')->with('error', 'Gagal memperbarui, data identitas profil donatur tidak ditemukan!');
+        }
+
+        $request->validate([
+            'nama_donatur' => 'required|string|max:255',
+            'no_hp'        => 'nullable|string|max:20',
+            'alamat'       => 'nullable|string',
+        ]);
+
+        $donatur->update([
+            'nama_donatur' => $request->nama_donatur,
+            'no_hp'        => $request->no_hp,
+            'alamat'       => $request->alamat,
+        ]);
+
+        return redirect()->route('admin.donatur.index')->with('success', 'Data identitas profil donatur berhasil diperbarui.');
+    }
+
+    /**
      * Tampilan Detail Profil Donatur (Include dari Use Case Kelola Data Donatur).
      * DISEMPURNAKAN: Menangani pencarian entitas tunggal donatur berdasarkan id_donatur melalui Eloquent.
      * REVISI DIREKTORI VIEW: Diarahkan dengan presisi ke folder 'admin/kelola_donatur/show.blade.php'
+     * PERBAIKAN INTELEPHENSE: Menambahkan Type Hinting string|int pada parameter $id_donatur
      */
-    public function donatur_show($id_donatur): View|RedirectResponse
+    public function donatur_show(string|int $id_donatur): View|RedirectResponse
     {
         $donatur = Donatur::where('id_donatur', $id_donatur)->first();
 
@@ -106,8 +181,9 @@ class AdminController extends Controller
     /**
      * Menghapus Data Entitas Donatur dari Sistem.
      * DISEMPURNAKAN: Dilengkapi proteksi integritas tabel data kunjungan.
+     * PERBAIKAN INTELEPHENSE: Menambahkan Type Hinting string|int pada parameter $id_donatur
      */
-    public function donatur_destroy($id_donatur): RedirectResponse
+    public function donatur_destroy(string|int $id_donatur): RedirectResponse
     {
         try {
             // Proteksi Integritas Database: Cek apakah donatur memiliki relasi transaksi di tabel kunjungan/donasi
@@ -263,8 +339,9 @@ class AdminController extends Controller
     /**
      * Tampilan Detail Profil Pengguna (Show).
      * PERBAIKAN: Menggunakan primary key $id_user untuk pencarian entitas tunggal.
+     * PERBAIKAN INTELEPHENSE: Menambahkan Type Hinting string|int pada parameter $id_user
      */
-    public function user_show($id_user): View
+    public function user_show(string|int $id_user): View
     {
         $user = User::findOrFail($id_user);
         return view('admin.manajemen_user.show', compact('user'));
@@ -273,8 +350,9 @@ class AdminController extends Controller
     /**
      * Form Edit Data & Reset Password Pengguna (Edit).
      * PERBAIKAN: Menggunakan primary key $id_user untuk pencarian entitas tunggal.
+     * PERBAIKAN INTELEPHENSE: Menambahkan Type Hinting string|int pada parameter $id_user
      */
-    public function user_edit($id_user): View
+    public function user_edit(string|int $id_user): View
     {
         $user = User::findOrFail($id_user);
         return view('admin.manajemen_user.edit', compact('user'));
@@ -284,8 +362,9 @@ class AdminController extends Controller
      * Proses Memperbarui Data Pengguna (Update).
      * PERBAIKAN: Menggunakan tabel 'user', key target 'username', di-ignore berdasarkan 'id_user', 
      * dan menyelaraskan aturan validasi role ENUM database.
+     * PERBAIKAN INTELEPHENSE: Menambahkan Type Hinting string|int pada parameter $id_user
      */
-    public function user_update(Request $request, $id_user): RedirectResponse
+    public function user_update(Request $request, string|int $id_user): RedirectResponse
     {
         $user = User::findOrFail($id_user);
 
@@ -317,8 +396,9 @@ class AdminController extends Controller
     /**
      * Menghapus Akses Data Pengguna (Destroy).
      * PERBAIKAN: Menghapus data spesifik user dari database berdasarkan primary key id_user.
+     * PERBAIKAN INTELEPHENSE: Menambahkan Type Hinting string|int pada parameter $id_user
      */
-    public function user_destroy($id_user): RedirectResponse
+    public function user_destroy(string|int $id_user): RedirectResponse
     {
         // Proteksi tingkat tinggi: Mencegah Administrator menghapus akunnya sendiri secara tidak sengaja
         if (Auth::id() == $id_user) {

@@ -28,23 +28,40 @@ class Donatur extends Model
 
     /**
      * DISEMPURNAKAN: Relasi ke Donasi Uang
-     * Karena jalurnya jauh (Donatur -> Kunjungan -> Donasi -> DonasiUang), 
-     * kita tetap definisikan relasi agar tidak error saat dipanggil (eager loading),
-     * namun penanganannya lebih optimal jika menggunakan collection di Controller.
+     * Memperbaiki bug key mismatch dengan menggunakan hasManyThrough dari model Donasi
+     * Jalur aman: Donatur -> Kunjungan -> Donasi -> DonasiUang
      */
     public function donasi_uang()
     {
-        // Tetap menggunakan hasMany ke DonasiUang sebagai placeholder relasi, 
-        // Namun kunci utama data ini ada di fungsi donatur_show() pada Controller
-        return $this->hasMany(DonasiUang::class, 'id_donasi', 'id_donasi');
+        return $this->hasManyThrough(
+            DonasiUang::class,
+            Donasi::class,
+            'id_kunjungan', // Foreign key di tabel Donasi (melalui Kunjungan)
+            'id_donasi',    // Foreign key di tabel DonasiUang
+            'id_donatur',   // Local key di tabel Donatur
+            'id_donasi'     // Local key di tabel Donasi
+        )->whereIn('donasi.id_kunjungan', function($query) {
+            $query->select('id_kunjungan')->from('kunjungan')->whereColumn('id_donatur', 'donatur.id_donatur');
+        });
     }
 
     /**
      * DISEMPURNAKAN: Relasi ke Donasi Barang
+     * Memperbaiki bug key mismatch dengan menggunakan hasManyThrough dari model Donasi
+     * Jalur aman: Donatur -> Kunjungan -> Donasi -> DonasiBarang
      */
     public function donasi_barang()
     {
-        return $this->hasMany(DonasiBarang::class, 'id_donasi', 'id_donasi');
+        return $this->hasManyThrough(
+            DonasiBarang::class,
+            Donasi::class,
+            'id_kunjungan', // Foreign key di tabel Donasi (melalui Kunjungan)
+            'id_donasi',    // Foreign key di tabel DonasiBarang
+            'id_donatur',   // Local key di tabel Donatur
+            'id_donasi'     // Local key di tabel Donasi
+        )->whereIn('donasi.id_kunjungan', function($query) {
+            $query->select('id_kunjungan')->from('kunjungan')->whereColumn('id_donatur', 'donatur.id_donatur');
+        });
     }
 
     /**

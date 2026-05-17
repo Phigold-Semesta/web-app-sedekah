@@ -39,7 +39,9 @@ Route::middleware(['auth'])->group(function () {
      * Menggunakan pengecekan yang lebih fleksibel untuk 'admin' atau 'administrator'.
      */
     Route::get('/dashboard', function () {
-        $role = auth()->user()->role;
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $role = $user->role;
         
         if (in_array($role, ['admin', 'administrator', 'petugas'])) { 
             return redirect()->route('admin.dashboard');
@@ -62,7 +64,11 @@ Route::middleware(['auth'])->group(function () {
         // Menyelaraskan name, prefix, dan parameter {id_donatur} agar klop dengan AdminController
         Route::prefix('donatur')->name('donatur.')->group(function () {
             Route::get('/', [AdminController::class, 'donatur'])->name('index');
+            Route::get('/create', [AdminController::class, 'donatur_create'])->name('create');
+            Route::post('/', [AdminController::class, 'donatur_store'])->name('store');
             Route::get('/show/{id_donatur}', [AdminController::class, 'donatur_show'])->name('show');
+            Route::get('/edit/{id_donatur}', [AdminController::class, 'donatur_edit'])->name('edit');
+            Route::put('/update/{id_donatur}', [AdminController::class, 'donatur_update'])->name('update');
             Route::delete('/destroy/{id_donatur}', [AdminController::class, 'donatur_destroy'])->name('destroy');
         });
         
