@@ -67,11 +67,15 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
             Route::get('/', [AdminController::class, 'user_index'])->name('index');
             Route::get('/create', [AdminController::class, 'user_create'])->name('create');
-            Route::post('/store', [AdminController::class, 'user_store'])->name('store');
-            Route::get('/show/{id}', [AdminController::class, 'user_show'])->name('show');
-            Route::get('/edit/{id}', [AdminController::class, 'user_edit'])->name('edit');
-            Route::put('/update/{id}', [AdminController::class, 'user_update'])->name('update');
-            Route::delete('/destroy/{id}', [AdminController::class, 'user_destroy'])->name('destroy');
+            
+            // PERBAIKAN UTAMA: Mengubah URL '/store' menjadi '/' untuk mengamankan fallback GET 405 saat validasi gagal
+            Route::post('/', [AdminController::class, 'user_store'])->name('store');
+            
+            // DISESUAIKAN: Parameter diselaraskan dari {id} menjadi {id_user} agar klop dengan Controller
+            Route::get('/show/{id_user}', [AdminController::class, 'user_show'])->name('show');
+            Route::get('/edit/{id_user}', [AdminController::class, 'user_edit'])->name('edit');
+            Route::put('/update/{id_user}', [AdminController::class, 'user_update'])->name('update');
+            Route::delete('/destroy/{id_user}', [AdminController::class, 'user_destroy'])->name('destroy');
         });
     });
 
@@ -82,7 +86,8 @@ Route::middleware(['auth'])->group(function () {
         // --- PENYEMPURNAAN RUTE MONITORING DONATUR ---
         Route::prefix('monitoring-donatur')->name('riwayat_donatur.')->group(function () {
             Route::get('/', [DirekturController::class, 'riwayat_donatur'])->name('index');
-            Route::get('/show/{id}', [DirekturController::class, 'donatur_show'])->name('show');
+            // DISESUAIKAN KLOP DB: Parameter diselaraskan menjadi {id_user} agar seragam mencari entitas profil user
+            Route::get('/show/{id_user}', [DirekturController::class, 'donatur_show'])->name('show');
         });
         
         // --- PENYEMPURNAAN RUTE KEUANGAN (MODEL: DonasiUang) ---
@@ -107,11 +112,15 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
             Route::get('/', [DirekturController::class, 'user_index'])->name('index');
             Route::get('/create', [DirekturController::class, 'user_create'])->name('create');
-            Route::post('/store', [DirekturController::class, 'user_store'])->name('store');
-            Route::get('/show/{id}', [DirekturController::class, 'user_show'])->name('show');
-            Route::get('/edit/{id}', [DirekturController::class, 'user_edit'])->name('edit');
-            Route::put('/update/{id}', [DirekturController::class, 'user_update'])->name('update');
-            Route::delete('/destroy/{id}', [DirekturController::class, 'user_destroy'])->name('destroy');
+            
+            // PERBAIKAN UTAMA: Mengubah URL '/store' menjadi '/' untuk mengamankan fallback GET 405 saat validasi gagal
+            Route::post('/', [DirekturController::class, 'user_store'])->name('store');
+            
+            // DISESUAIKAN: Parameter diselaraskan dari {id} menjadi {id_user} agar klop dengan Controller Eksklusif Direktur
+            Route::get('/show/{id_user}', [DirekturController::class, 'user_show'])->name('show');
+            Route::get('/edit/{id_user}', [DirekturController::class, 'user_edit'])->name('edit');
+            Route::put('/update/{id_user}', [DirekturController::class, 'user_update'])->name('update');
+            Route::delete('/destroy/{id_user}', [DirekturController::class, 'user_destroy'])->name('destroy');
         });
     });
 });

@@ -46,6 +46,7 @@
         [x-cloak] { display: none !important; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         
+        /* Master Sidebar Animation Mechanics */
         #main-sidebar {
             width: 88px; 
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -59,6 +60,7 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
+        /* Active State with Luxury Gold Accent Indicator */
         .sidebar-active {
             color: #ffffff !important;
             font-weight: 800;
@@ -74,9 +76,10 @@
             width: 4px;
             background: #FFF200;
             border-radius: 0 4px 4px 0;
-            box-shadow: 0 0 10px rgba(255, 242, 0, 0.5);
+            box-shadow: 0 0 10px rgba(255, 242, 0, 0.7);
         }
 
+        /* Desktop View Hover System */
         @media (min-width: 1024px) {
             #main-sidebar:hover { width: 288px; }
             
@@ -103,6 +106,7 @@
             }
         }
 
+        /* Mobile Responsive System */
         @media (max-width: 1024px) {
             #main-sidebar { position: fixed; left: -100%; width: 280px; }
             #main-sidebar.show-sidebar { left: 0; }
@@ -111,8 +115,10 @@
             #main-sidebar .nav-item { width: 100%; justify-content: flex-start; padding-left: 2rem; height: 56px; }
         }
 
+        /* Custom Premium Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
     </style>
 </head>
 <body class="antialiased text-slate-800 bg-[#f8fafc] dark:bg-[#020d0b] dark:text-emerald-50 transition-colors duration-300">
@@ -179,7 +185,6 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Audit Log Admin</span>
                     </a>
 
-                    {{-- --- PENYEMPURNAAN: ROUTE SUDAH MENGGUNAKAN TANDA ASTERISK (*) --- --}}
                     <a href="{{ route('admin.manajemen_user.index') }}" class="nav-item {{ request()->routeIs('admin.manajemen_user.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-user-cog w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Manajemen User</span>
@@ -237,6 +242,7 @@
         </aside>
 
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+            
             <header class="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 flex justify-between items-center px-8 z-20 shrink-0 transition-all">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleMobileSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-primary active:scale-90 transition-transform">
@@ -303,7 +309,9 @@
                     cancelButton: 'rounded-2xl font-black text-[10px] tracking-widest px-8 py-3 text-slate-500'
                 }
             }).then((result) => {
-                if (result.isConfirmed) { document.getElementById('logout-form').submit(); }
+                if (result.isConfirmed) { 
+                    document.getElementById('logout-form').submit(); 
+                }
             });
         }
     </script>
