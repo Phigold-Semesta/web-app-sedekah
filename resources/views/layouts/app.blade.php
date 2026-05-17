@@ -155,13 +155,12 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Dashboard Operasional</span>
                     </a>
 
-                    {{-- PERBAIKAN SINKRONISASI RUTE: Diubah ke admin.donatur.index dan pengecekan menggunakan wildcard (.*) --}}
                     <a href="{{ route('admin.donatur.index') }}" class="nav-item {{ request()->routeIs('admin.donatur.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-user-friends w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kelola Data Donatur</span>
                     </a>
 
-                    <a href="{{ route('admin.riwayat') }}" class="nav-item {{ request()->routeIs('admin.riwayat') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                    <a href="#" class="nav-item hover:text-white hover:bg-white/5">
                         <i class="fas fa-comments w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kunjungan & Feedback</span>
                     </a>
@@ -176,7 +175,8 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Master Kategori</span>
                     </a>
 
-                    <a href="{{ route('admin.distribusi') }}" class="nav-item {{ request()->routeIs('admin.distribusi') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                    {{-- PERBAIKAN UTAMA: Menyinkronkan rute target menu dan mencakup sub-halaman detail & update status via wildcard (*) --}}
+                    <a href="{{ route('admin.riwayat_donasi.index') }}" class="nav-item {{ request()->routeIs('admin.riwayat_donasi.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-history w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat Kelola Donasi</span>
                     </a>

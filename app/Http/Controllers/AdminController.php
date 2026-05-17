@@ -8,6 +8,9 @@ use Illuminate\Http\RedirectResponse;
 use App\Models\AuditLog; // Ditambahkan agar data log bisa dipanggil secara dinamis
 use App\Models\User; // Ditambahkan untuk memanipulasi data tabel user secara dinamis
 use App\Models\Donatur; // DISINKRONKAN: Memanggil Model Donatur tanpa huruf S jamak di ujung kata
+use App\Models\Donasi; // DISINKRONKAN: Memanggil Model Donasi untuk riwayat transaksi gabungan
+use App\Exports\DonasiKeseluruhanExport; // DISINKRONKAN: Memanggil class export Maatwebsite Excel
+use Maatwebsite\Excel\Facades\Excel; // DISINKRONKAN: Memanggil Facade Laravel Excel untuk trigger download
 use Illuminate\Support\Facades\Hash; // Ditambahkan untuk enkripsi password manual SOWAN v2
 use Illuminate\Support\Facades\Auth; // Ditambahkan untuk proteksi delete-self akun aktif
 use Illuminate\Support\Facades\DB; // DIKUKUHKAN: Untuk mengelola query tabel donatur secara aman
@@ -43,12 +46,160 @@ class AdminController extends Controller
     }
 
     /**
-     * Riwayat Transaksi.
-     * Menampilkan log keseluruhan donasi yang sudah selesai atau diproses.
+     * Riwayat Transaksi Keseluruhan (Index).
+     * DISEMPURNAKAN & DIHIDUPKAN: Menyatukan pelacakan donasi uang/barang dengan fitur search, filter, dan pagination dinamis.
+     * REVISI DIREKTORI VIEW: Diarahkan langsung bersatu ke folder 'admin.riwayat_donasi.index' tanpa pecahan partials.
      */
-    public function riwayat(): View
+    public function riwayat(Request $request): View
     {
-        return view('admin.riwayat');
+        // 1. Ambil parameter pencarian, filter, dan batas halaman dari Blade view
+        $search = $request->input('search');
+        $statusFilter = $request->input('status');
+        $jenisFilter = $request->input('jenis');
+        $tanggalMulai = $request->input('tanggal_mulai');
+        $tanggalSelesai = $request->input('tanggal_selesai');
+        $perPage = $request->input('per_page', 10);
+
+        // 2. Bangun query dasar Eloquent dengan teknik Eager Loading untuk mencegah problem N+1 query
+        $query = Donasi::with(['kunjungan.donatur', 'donasi_uang', 'donasi_barang.kategori_barang', 'user']);
+
+        // 3. Logika Fitur Pencarian Global (Berdasarkan nama donatur atau ID donasi)
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id_donasi', 'LIKE', "%{$search}%")
+                  ->orWhereHas('kunjungan.donatur', function ($donaturQuery) use ($search) {
+                      $donaturQuery->where('nama_donatur', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        // 4. Logika Fitur Filter Data Berdasarkan Kriteria Input
+        if ($statusFilter) {
+            $query->where('status_donasi', $statusFilter);
+        }
+
+        if ($jenisFilter) {
+            if ($jenisFilter === 'uang') {
+                $query->has('donasi_uang');
+            } elseif ($jenisFilter === 'barang') {
+                $query->has('donasi_barang');
+            }
+        }
+
+        if ($tanggalMulai && $tanggalSelesai) {
+            $query->whereBetween('tgl_donasi', [$tanggalMulai, $tanggalSelesai]);
+        }
+
+        // 5. Eksekusi Pagination Dinamis Data Riwayat Urut Terbaru
+        if ($perPage === 'all') {
+            $riwayatDonasi = $query->orderBy('id_donasi', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
+        } else {
+            $riwayatDonasi = $query->orderBy('id_donasi', 'desc')->paginate((int)$perPage)->appends($request->query());
+        }
+
+        return view('admin.riwayat_donasi.index', compact('riwayatDonasi'));
+    }
+
+    /**
+     * Fitur Export Data Riwayat Transaksi.
+     * MENGHIDUPKAN TOMBOL EXPORT: Mengintegrasikan penanganan unduh data format PDF, Excel, dan CSV berdasarkan filter aktif.
+     */
+    public function export(Request $request)
+    {
+        $format = $request->get('format', 'pdf');
+        $search = $request->input('search');
+        $statusFilter = $request->input('status');
+        $jenisFilter = $request->input('jenis');
+        $tanggalMulai = $request->input('tanggal_mulai');
+        $tanggalSelesai = $request->input('tanggal_selesai');
+
+        $query = Donasi::with(['kunjungan.donatur', 'donasi_uang', 'donasi_barang.kategori_barang', 'user']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id_donasi', 'LIKE', "%{$search}%")
+                  ->orWhereHas('kunjungan.donatur', function ($donaturQuery) use ($search) {
+                      $donaturQuery->where('nama_donatur', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($statusFilter) {
+            $query->where('status_donasi', $statusFilter);
+        }
+
+        if ($jenisFilter) {
+            if ($jenisFilter === 'uang') {
+                $query->has('donasi_uang');
+            } elseif ($jenisFilter === 'barang') {
+                $query->has('donasi_barang');
+            }
+        }
+
+        if ($tanggalMulai && $tanggalSelesai) {
+            $query->whereBetween('tgl_donasi', [$tanggalMulai, $tanggalSelesai]);
+        }
+
+        // Urutkan data berdasarkan ID donasi terbaru
+        $query->orderBy('id_donasi', 'desc');
+        $timestamp = date('Ymd_His');
+
+        // MENGHIDUPKAN FITUR: Langsung memicu unduhan file ri nyata sesuai pilihan format, bukan teks JSON
+        switch ($format) {
+            case 'excel':
+                return Excel::download(new DonasiKeseluruhanExport($query), "Riwayat_Donasi_Keseluruhan_{$timestamp}.xlsx", \Maatwebsite\Excel\Excel::XLSX);
+            case 'csv':
+                return Excel::download(new DonasiKeseluruhanExport($query), "Riwayat_Donasi_Keseluruhan_{$timestamp}.csv", \Maatwebsite\Excel\Excel::CSV);
+            case 'pdf':
+            default:
+                $data = $query->get();
+                return view('admin.riwayat_donasi.export_pdf', compact('data'));
+        }
+    }
+
+    /**
+     * Tampilan Detail Rincian Riwayat Transaksi (Show).
+     * SINKRONISASI USE CASE: Menampilkan profit donatur lengkap beserta rincian item (Uang/Barang).
+     */
+    public function riwayat_show(string|int $id_donasi): View|RedirectResponse
+    {
+        $donasi = Donasi::with([
+            'kunjungan.donatur',
+            'kunjungan.penilaian',
+            'donasi_uang.pembayaran',
+            'donasi_barang.kategori_barang',
+            'user'
+        ])->where('id_donasi', $id_donasi)->first();
+
+        if (!$donasi) {
+            return redirect()->route('admin.riwayat')->with('error', 'Berkas log data riwayat transaksi donasi tidak ditemukan!');
+        }
+
+        return view('admin.riwayat_donasi.show', compact('donasi'));
+    }
+
+    /**
+     * Proses Verifikasi / Pembaruan Status Riwayat Transaksi (Update).
+     * SINKRONISASI USE CASE: Mengubah status log donasi dan merekam jejak user administrator yang bertugas.
+     */
+    public function riwayat_update_status(Request $request, string|int $id_donasi): RedirectResponse
+    {
+        $donasi = Donasi::where('id_donasi', $id_donasi)->first();
+
+        if (!$donasi) {
+            return redirect()->route('admin.riwayat')->with('error', 'Gagal memproses, data riwayat transaksi tidak ditemukan!');
+        }
+
+        $request->validate([
+            'status_donasi' => 'required|string|in:Proses,Selesai,Ditolak',
+        ]);
+
+        $donasi->update([
+            'status_donasi' => $request->status_donasi,
+            'id_user' => Auth::id(), // Rekam ID Administrator pengubah data otomatis ke database
+        ]);
+
+        return redirect()->back()->with('success', 'Status otorisasi riwayat transaksi donasi berhasil disesuaikan.');
     }
 
     /**
@@ -114,7 +265,8 @@ class AdminController extends Controller
             'alamat'       => $request->alamat,
         ]);
 
-        return redirect()->route('admin.donatur.index')->with('success', 'Data entitas donatur baru berhasil disimpan secara manual.');
+        // PERBAIKAN RUTAN: Route diarahkan langsung ke 'admin.donatur' sesuai rujukan nama index donatur di aplikasi ini
+        return redirect()->route('admin.donatur')->with('success', 'Data entitas donatur baru berhasil disimpan secara manual.');
     }
 
     /**
@@ -127,7 +279,7 @@ class AdminController extends Controller
         $donatur = Donatur::where('id_donatur', $id_donatur)->first();
 
         if (!$donatur) {
-            return redirect()->route('admin.donatur.index')->with('error', 'Data identitas profil donatur tidak ditemukan!');
+            return redirect()->route('admin.donatur')->with('error', 'Data identitas profil donatur tidak ditemukan!');
         }
 
         return view('admin.kelola_donatur.edit', compact('donatur'));
@@ -143,7 +295,7 @@ class AdminController extends Controller
         $donatur = Donatur::where('id_donatur', $id_donatur)->first();
 
         if (!$donatur) {
-            return redirect()->route('admin.donatur.index')->with('error', 'Gagal memperbarui, data identitas profil donatur tidak ditemukan!');
+            return redirect()->route('admin.donatur')->with('error', 'Gagal memperbarui, data identitas profil donatur tidak ditemukan!');
         }
 
         $request->validate([
@@ -158,7 +310,7 @@ class AdminController extends Controller
             'alamat'       => $request->alamat,
         ]);
 
-        return redirect()->route('admin.donatur.index')->with('success', 'Data identitas profil donatur berhasil diperbarui.');
+        return redirect()->route('admin.donatur')->with('success', 'Data identitas profil donatur berhasil diperbarui.');
     }
 
     /**
@@ -172,7 +324,7 @@ class AdminController extends Controller
         $donatur = Donatur::where('id_donatur', $id_donatur)->first();
 
         if (!$donatur) {
-            return redirect()->route('admin.donatur.index')->with('error', 'Data identitas profil donatur tidak ditemukan!');
+            return redirect()->route('admin.donatur')->with('error', 'Data identitas profil donatur tidak ditemukan!');
         }
 
         return view('admin.kelola_donatur.show', compact('donatur'));
@@ -189,7 +341,7 @@ class AdminController extends Controller
             // Proteksi Integritas Database: Cek apakah donatur memiliki relasi transaksi di tabel kunjungan/donasi
             $hasRelations = DB::table('kunjungan')->where('id_donatur', $id_donatur)->exists();
             if ($hasRelations) {
-                return redirect()->route('admin.donatur.index')->with('error', 'Gagal! Data donatur tidak dapat dihapus karena memiliki keterikatan riwayat kunjungan atau transaksi.');
+                return redirect()->route('admin.donatur')->with('error', 'Gagal! Data donatur tidak dapat dihapus karena memiliki keterikatan riwayat kunjungan atau transaksi.');
             }
 
             $donatur = Donatur::where('id_donatur', $id_donatur)->first();
@@ -197,9 +349,9 @@ class AdminController extends Controller
                 $donatur->delete();
             }
             
-            return redirect()->route('admin.donatur.index')->with('success', 'Data entitas donatur berhasil dihapus permanen dari sistem.');
+            return redirect()->route('admin.donatur')->with('success', 'Data entitas donatur berhasil dihapus permanen dari sistem.');
         } catch (\Exception $e) {
-            return redirect()->route('admin.donatur.index')->with('error', 'Terjadi kesalahan sistem saat mencoba menghapus data.');
+            return redirect()->route('admin.donatur')->with('error', 'Terjadi kesalahan sistem saat mencoba menghapus data.');
         }
     }
 

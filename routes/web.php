@@ -57,8 +57,19 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
         Route::get('/verifikasi', [AdminController::class, 'verifikasi'])->name('verifikasi');
         Route::get('/distribusi', [AdminController::class, 'distribusi'])->name('distribusi');
-        Route::get('/riwayat', [AdminController::class, 'riwayat'])->name('riwayat');
         Route::get('/kategori', [AdminController::class, 'kategori'])->name('kategori');
+        
+        // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE KELOLA RIWAYAT DONASI KESELURUHAN ---
+        // PERBAIKAN: Menambahkan ->name('riwayat_donasi.') dan mengubah nama sub-route menjadi 'index' agar klop dengan pemanggilan view Blade
+        Route::prefix('riwayat-donasi')->name('riwayat_donasi.')->group(function () {
+            Route::get('/', [AdminController::class, 'riwayat'])->name('index');
+            
+            // PERBAIKAN DISKRESI: Menambahkan rute ekspor dan diletakkan sebelum parameter dinamis {id_donasi} agar tidak bentrok
+            Route::get('/export', [AdminController::class, 'export'])->name('export');
+            
+            Route::get('/show/{id_donasi}', [AdminController::class, 'riwayat_show'])->name('show');
+            Route::put('/update-status/{id_donasi}', [AdminController::class, 'riwayat_update_status'])->name('update_status');
+        });
         
         // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE KELOLA DATA DONATUR ---
         // Menyelaraskan name, prefix, dan parameter {id_donatur} agar klop dengan AdminController
