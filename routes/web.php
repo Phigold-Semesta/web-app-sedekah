@@ -56,8 +56,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/verifikasi', [AdminController::class, 'verifikasi'])->name('verifikasi');
         Route::get('/distribusi', [AdminController::class, 'distribusi'])->name('distribusi');
         Route::get('/riwayat', [AdminController::class, 'riwayat'])->name('riwayat');
-        Route::get('/donatur', [AdminController::class, 'donatur'])->name('donatur');
         Route::get('/kategori', [AdminController::class, 'kategori'])->name('kategori');
+        
+        // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE KELOLA DATA DONATUR ---
+        // Menyelaraskan name, prefix, dan parameter {id_donatur} agar klop dengan AdminController
+        Route::prefix('donatur')->name('donatur.')->group(function () {
+            Route::get('/', [AdminController::class, 'donatur'])->name('index');
+            Route::get('/show/{id_donatur}', [AdminController::class, 'donatur_show'])->name('show');
+            Route::delete('/destroy/{id_donatur}', [AdminController::class, 'donatur_destroy'])->name('destroy');
+        });
         
         // PERBAIKAN: Menyelaraskan name route menjadi 'audit_log.index' agar klop dengan pemanggilan view dan layout sidebar admin
         Route::get('/audit-log', [AdminController::class, 'audit'])->name('audit_log.index');

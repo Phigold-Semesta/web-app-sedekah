@@ -7,8 +7,10 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use App\Models\AuditLog; // Ditambahkan agar data log bisa dipanggil secara dinamis
 use App\Models\User; // Ditambahkan untuk memanipulasi data tabel user secara dinamis
+use App\Models\Donatur; // DISINKRONKAN: Memanggil Model Donatur tanpa huruf S jamak di ujung kata
 use Illuminate\Support\Facades\Hash; // Ditambahkan untuk enkripsi password manual SOWAN v2
 use Illuminate\Support\Facades\Auth; // Ditambahkan untuk proteksi delete-self akun aktif
+use Illuminate\Support\Facades\DB; // DIKUKUHKAN: Untuk mengelola query tabel donatur secara aman
 
 class AdminController extends Controller
 {
@@ -51,11 +53,78 @@ class AdminController extends Controller
 
     /**
      * Master Data Donatur.
-     * Fungsi untuk mengelola data profil donatur tetap maupun tidak tetap.
+     * DISEMPURNAKAN & DIHIDUPKAN: Mengelola data profil donatur secara dinamis dengan fitur Search dan Pagination.
+     * REVISI DIREKTORI VIEW: Diarahkan dengan presisi ke folder 'admin/kelola_donatur/index.blade.php'
+     * PENYELARASAN: Mengubah nama variabel penampung menjadi $donaturs agar terbaca oleh komponen view Blade.
      */
-    public function donatur(): View
+    public function donatur(Request $request): View
     {
-        return view('admin.donatur');
+        // 1. Ambil parameter filter pencarian dan jumlah baris dari view Blade
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        // 2. Bangun query builder melalui Eloquent Model 'Donatur' tanpa huruf s jamak
+        $query = Donatur::query();
+
+        // 3. Logika Fitur Pencarian (Search) berdasarkan Nama, No HP, atau Alamat
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_donatur', 'LIKE', "%{$search}%")
+                  ->orWhere('no_hp', 'LIKE', "%{$search}%")
+                  ->orWhere('alamat', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // 4. Logika Pagination / Menampilkan seluruh data sesuai kebutuhan filter
+        // DISESUAIKAN: Nama variabel penampung diganti menjadi $donaturs agar sinkron dengan @forelse($donaturs)
+        if ($perPage === 'all') {
+            $donaturs = $query->orderBy('id_donatur', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
+        } else {
+            $donaturs = $query->orderBy('id_donatur', 'desc')->paginate((int)$perPage)->appends($request->query());
+        }
+
+        // Mengembalikan view utama dengan membawa variabel $donaturs agar klop dengan @forelse di Blade
+        return view('admin.kelola_donatur.index', compact('donaturs'));
+    }
+
+    /**
+     * Tampilan Detail Profil Donatur (Include dari Use Case Kelola Data Donatur).
+     * DISEMPURNAKAN: Menangani pencarian entitas tunggal donatur berdasarkan id_donatur melalui Eloquent.
+     * REVISI DIREKTORI VIEW: Diarahkan dengan presisi ke folder 'admin/kelola_donatur/show.blade.php'
+     */
+    public function donatur_show($id_donatur): View|RedirectResponse
+    {
+        $donatur = Donatur::where('id_donatur', $id_donatur)->first();
+
+        if (!$donatur) {
+            return redirect()->route('admin.donatur.index')->with('error', 'Data identitas profil donatur tidak ditemukan!');
+        }
+
+        return view('admin.kelola_donatur.show', compact('donatur'));
+    }
+
+    /**
+     * Menghapus Data Entitas Donatur dari Sistem.
+     * DISEMPURNAKAN: Dilengkapi proteksi integritas tabel data kunjungan.
+     */
+    public function donatur_destroy($id_donatur): RedirectResponse
+    {
+        try {
+            // Proteksi Integritas Database: Cek apakah donatur memiliki relasi transaksi di tabel kunjungan/donasi
+            $hasRelations = DB::table('kunjungan')->where('id_donatur', $id_donatur)->exists();
+            if ($hasRelations) {
+                return redirect()->route('admin.donatur.index')->with('error', 'Gagal! Data donatur tidak dapat dihapus karena memiliki keterikatan riwayat kunjungan atau transaksi.');
+            }
+
+            $donatur = Donatur::where('id_donatur', $id_donatur)->first();
+            if ($donatur) {
+                $donatur->delete();
+            }
+            
+            return redirect()->route('admin.donatur.index')->with('success', 'Data entitas donatur berhasil dihapus permanen dari sistem.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.donatur.index')->with('error', 'Terjadi kesalahan sistem saat mencoba menghapus data.');
+        }
     }
 
     /**
@@ -158,7 +227,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Proses Menyimpan Data Pengguna Baru (Store).
+     * Process Menyimpan Data Pengguna Baru (Store).
      * PENYEMPURNAKAN & SOLUSI UTAMA: Menggunakan manual validator catcher 
      * dan menyelaraskan validasi role dengan aturan ENUM asli phpMyAdmin ('administrator','direktur').
      */
