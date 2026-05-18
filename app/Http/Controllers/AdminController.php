@@ -78,6 +78,7 @@ class AdminController extends Controller
             $query->where('status_donasi', $statusFilter);
         }
 
+        // 5. Logika Fitur Filter Jenis Donasi
         if ($jenisFilter) {
             if ($jenisFilter === 'uang') {
                 $query->has('donasi_uang');
@@ -90,7 +91,7 @@ class AdminController extends Controller
             $query->whereBetween('tgl_donasi', [$tanggalMulai, $tanggalSelesai]);
         }
 
-        // 5. Eksekusi Pagination Dinamis Data Riwayat Urut Terbaru
+        // 6. Eksekusi Pagination Dinamis Data Riwayat Urut Terbaru
         if ($perPage === 'all') {
             $riwayatDonasi = $query->orderBy('id_donasi', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
         } else {
@@ -102,7 +103,7 @@ class AdminController extends Controller
 
     /**
      * Fitur Export Data Riwayat Transaksi.
-     * MENGHIDUPKAN TOMBOL EXPORT: Mengintegrasikan penanganan unduh data format PDF, Excel, dan CSV berdasarkan filter aktif.
+     * PERBAIKAN TOTAL: Mengarahkan seluruh ekspor (Excel, CSV, PDF) menggunakan satu kelas murni DonasiKeseluruhanExport.
      */
     public function export(Request $request)
     {
@@ -144,7 +145,7 @@ class AdminController extends Controller
         $query->orderBy('id_donasi', 'desc');
         $timestamp = date('Ymd_His');
 
-        // MENGHIDUPKAN FITUR: Langsung memicu unduhan file ri nyata sesuai pilihan format, bukan teks JSON
+        // PERBAIKAN: Seluruh format diarahkan murni via satu pintu backend class DonasiKeseluruhanExport
         switch ($format) {
             case 'excel':
                 return Excel::download(new DonasiKeseluruhanExport($query), "Riwayat_Donasi_Keseluruhan_{$timestamp}.xlsx", \Maatwebsite\Excel\Excel::XLSX);
@@ -152,8 +153,8 @@ class AdminController extends Controller
                 return Excel::download(new DonasiKeseluruhanExport($query), "Riwayat_Donasi_Keseluruhan_{$timestamp}.csv", \Maatwebsite\Excel\Excel::CSV);
             case 'pdf':
             default:
-                $data = $query->get();
-                return view('admin.riwayat_donasi.export_pdf', compact('data'));
+                // Menghasilkan dokumen PDF mewah langsung dari class Export dengan driver DOMPDF bawaan Maatwebsite
+                return Excel::download(new DonasiKeseluruhanExport($query), "Riwayat_Donasi_Keseluruhan_{$timestamp}.pdf", \Maatwebsite\Excel\Excel::DOMPDF);
         }
     }
 
@@ -227,7 +228,6 @@ class AdminController extends Controller
         }
 
         // 4. Logika Pagination / Menampilkan seluruh data sesuai kebutuhan filter
-        // DISESUAIKAN: Nama variabel penampung diganti menjadi $donaturs agar sinkron dengan @forelse($donaturs)
         if ($perPage === 'all') {
             $donaturs = $query->orderBy('id_donatur', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
         } else {
@@ -412,7 +412,6 @@ class AdminController extends Controller
         $perPage = $request->input('per_page', 10);
 
         // 2. Hitung Ringkasan Statistik untuk Bagian Atas View (Stat Badges)
-        // PERBAIKAN KLOP DB: Menyesuaikan counter statistik agar sinkron dengan opsi Enum database Anda (tanpa petugas)
         $stats = [
             'total' => User::count(),
             'admin' => User::where('role', 'administrator')->count(),
@@ -426,7 +425,7 @@ class AdminController extends Controller
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('nama_user', 'like', '%' . $search . '%')
-                  ->orWhere('username', 'like', '%' . $search . '%'); // DISESUAIKAN: Menggunakan username (bukan email) sesuai database
+                  ->orWhere('username', 'like', '%' . $search . '%');
             });
         }
 
@@ -436,7 +435,6 @@ class AdminController extends Controller
         }
 
         // 4. Logika Penomoran Halaman (Pagination / All Data)
-        // PERBAIKAN NYATA: Mengubah nama variabel penampung dari $users menjadi $user_list agar dibaca oleh Blade
         if ($perPage === 'all') {
             $user_list = $query->paginate($query->count() ?: 10)->appends($request->query());
         } else {
@@ -462,7 +460,6 @@ class AdminController extends Controller
     public function user_store(Request $request): RedirectResponse
     {
         // 1. Lakukan Validasi Secara Manual agar Alur Redirect Gagal Bisa Dikontrol Penuh
-        // PERBAIKAN KLOP DB: Opsi 'petugas' dihapus dari validasi 'in' karena tidak didukung struktur ENUM database Anda
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'nama_user' => 'required|string|max:255',
             'username'  => 'required|string|unique:user,username|max:191', 
@@ -521,10 +518,8 @@ class AdminController extends Controller
         $user = User::findOrFail($id_user);
 
         // 1. Validasi Input Data Form Edit User (Abaikan username milik dirinya sendiri)
-        // PERBAIKAN KLOP DB: Aturan validasi role diselaraskan hanya untuk 'administrator' dan 'direktur'
         $request->validate([
             'nama_user' => 'required|string|max:255',
-            // SOLUSI UTAMA: unique:nama_tabel,kolom,id_diabaikan,kolom_primary_key
             'username'  => 'required|string|max:191|unique:user,username,' . $id_user . ',id_user',
             'role'      => 'required|in:administrator,direktur',
             'password'  => 'nullable|string|min:6', // Bersifat opsional saat edit data profil
@@ -560,6 +555,6 @@ class AdminController extends Controller
         $user = User::findOrFail($id_user);
         $user->delete();
 
-        return redirect()->route('admin.manajemen_user.index')->with('success', 'Akses data akun pengguna ' . $user->nama_user . ' berhasil dihapus permanen dari sistem.');
+        return redirect()->route('admin.manajemen_user.index')->with('success', 'Akses data akun pengguna ' . $user->nama_user . ' berhasil deleted permanen dari sistem.');
     }
 }
