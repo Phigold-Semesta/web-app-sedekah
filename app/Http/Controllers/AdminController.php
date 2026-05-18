@@ -9,6 +9,7 @@ use App\Models\AuditLog; // Ditambahkan agar data log bisa dipanggil secara dina
 use App\Models\User; // Ditambahkan untuk memanipulasi data tabel user secara dinamis
 use App\Models\Donatur; // DISINKRONKAN: Memanggil Model Donatur tanpa huruf S jamak di ujung kata
 use App\Models\Donasi; // DISINKRONKAN: Memanggil Model Donasi untuk riwayat transaksi gabungan
+use App\Models\KategoriBarang; // DISINKRONKAN: Memanggil Model KategoriBarang untuk pengelolaan master logistik barang
 use App\Exports\DonasiKeseluruhanExport; // DISINKRONKAN: Memanggil class export Maatwebsite Excel
 use Maatwebsite\Excel\Facades\Excel; // DISINKRONKAN: Memanggil Facade Laravel Excel untuk trigger download
 use Illuminate\Support\Facades\Hash; // Ditambahkan untuk enkripsi password manual SOWAN v2
@@ -91,7 +92,7 @@ class AdminController extends Controller
             $query->whereBetween('tgl_donasi', [$tanggalMulai, $tanggalSelesai]);
         }
 
-        // 6. Eksekusi Pagination Dinamis Data Riwayat Urut Terbaru
+        // 6. Eksekusi Pagination Dinamis Data Riwayat Urut Terbaru (Mendukung opsi 5, 10, 25, 50, dan all)
         if ($perPage === 'all') {
             $riwayatDonasi = $query->orderBy('id_donasi', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
         } else {
@@ -200,13 +201,14 @@ class AdminController extends Controller
             'id_user' => Auth::id(), // Rekam ID Administrator pengubah data otomatis ke database
         ]);
 
+        // PERBAIKAN SINTAKS: Mengubah key session 'with' menjadi 'success' agar pesan alert dapat terbaca sistem Blade
         return redirect()->back()->with('success', 'Status otorisasi riwayat transaksi donasi berhasil disesuaikan.');
     }
 
     /**
      * Master Data Donatur.
      * DISEMPURNAKAN & DIHIDUPKAN: Mengelola data profil donatur secara dinamis dengan fitur Search dan Pagination.
-     * REVISI DIREKTORI VIEW: Diarahkan dengan presisi ke folder 'admin/kelola_donatur/index.blade.php'
+     * REVISI DIREKTORI VIEW: Diarahkan dengan presisi ke folder 'admin.kelola_donatur.index'
      * PENYELARASAN: Mengubah nama variabel penampung menjadi $donaturs agar terbaca oleh komponen view Blade.
      */
     public function donatur(Request $request): View
@@ -227,7 +229,7 @@ class AdminController extends Controller
             });
         }
 
-        // 4. Logika Pagination / Menampilkan seluruh data sesuai kebutuhan filter
+        // 4. Logika Pagination / Menampilkan seluruh data sesuai kebutuhan filter (Mendukung opsi 5 baris)
         if ($perPage === 'all') {
             $donaturs = $query->orderBy('id_donatur', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
         } else {
@@ -356,12 +358,104 @@ class AdminController extends Controller
     }
 
     /**
-     * Master Data Kategori.
-     * Mengelola kategori donasi (Zakat, Infak, Sedekah, atau kategori barang).
+     * Master Data Kategori (Index).
+     * DIHIDUPKAN & DISINKRONKAN: Mengelola entitas kategori logistik donasi barang dengan fitur pencarian dan paginasi.
      */
-    public function kategori(): View
+    public function kategori(Request $request): View
     {
-        return view('admin.kategori');
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        $query = KategoriBarang::query();
+
+        if ($search) {
+            $query->where('nama_kategori', 'LIKE', "%{$search}%");
+        }
+
+        if ($perPage === 'all') {
+            $kategori = $query->orderBy('id_kategori_barang', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
+        } else {
+            $kategori = $query->orderBy('id_kategori_barang', 'desc')->paginate((int)$perPage)->appends($request->query());
+        }
+
+        return view('admin.kategori_barang.index', compact('kategori'));
+    }
+
+    /**
+     * Form Tambah Kategori Barang (Create).
+     * DISINKRONKAN: Menampilkan view form tambah kategori barang mewah yang baru dibentuk.
+     */
+    public function kategoriCreate(): View
+    {
+        return view('admin.kategori_barang.create');
+    }
+
+    /**
+     * Process Menyimpan Data Kategori Baru (Store).
+     * DISINKRONKAN: Menyimpan entitas kategori barang berdasarkan struktur murni Model KategoriBarang ($fillable tanpa slug).
+     */
+    public function kategoriStore(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'nama_kategori' => 'required|string|max:100|unique:kategori_barang,nama_kategori',
+        ]);
+
+        KategoriBarang::create([
+            'nama_kategori' => $request->nama_kategori,
+        ]);
+
+        // PERBAIKAN AKSI: Diarahkan ke nama route index kategori barang yang valid agar tidak melompat
+        return redirect()->route('admin.kategori_barang.index')->with('success', 'Kategori baru berhasil didaftarkan ke dalam sistem!');
+    }
+
+    /**
+     * Form Edit Master Data Kategori (Edit).
+     * DISINKRONKAN: Mengambil data tunggal kategori untuk dimuat ke dalam rancangan form edit.
+     * SINKRONISASI PARAMETER: Variabel penangkap diselaraskan menjadi $id_kategori_barang agar cocok dengan Route
+     */
+    public function kategoriEdit(string|int $id_kategori_barang): View
+    {
+        $kategori = KategoriBarang::findOrFail($id_kategori_barang);
+        return view('admin.kategori_barang.edit', compact('kategori'));
+    }
+
+    /**
+     * Process Memperbarui Data Kategori (Update).
+     * DISINKRONKAN: Memperbarui record nama kategori dengan validasi key target id_kategori_barang yang tepat.
+     * SINKRONISASI PARAMETER: Variabel penangkap diselaraskan menjadi $id_kategori_barang agar cocok dengan Route
+     */
+    public function kategoriUpdate(Request $request, string|int $id_kategori_barang): RedirectResponse
+    {
+        $kategori = KategoriBarang::findOrFail($id_kategori_barang);
+
+        $request->validate([
+            'nama_kategori' => 'required|string|max:100|unique:kategori_barang,nama_kategori,' . $id_kategori_barang . ',id_kategori_barang',
+        ]);
+
+        $kategori->update([
+            'nama_kategori' => $request->nama_kategori,
+        ]);
+
+        // PERBAIKAN AKSI: Diarahkan ke nama route index kategori barang yang valid agar tidak melompat
+        return redirect()->route('admin.kategori_barang.index')->with('success', 'Data kategori berhasil diperbarui secara berkala!');
+    }
+
+    /**
+     * Menghapus Akses Data Kategori dari Sistem (Destroy).
+     * DISINKRONKAN: Melindungi sirkulasi penghapusan apabila kategori masih terpakai oleh tabel donasi_barang.
+     * SINKRONISASI PARAMETER: Variabel penangkap diselaraskan menjadi $id_kategori_barang agar cocok dengan Route
+     */
+    public function kategoriDestroy(string|int $id_kategori_barang): RedirectResponse
+    {
+        $kategori = KategoriBarang::findOrFail($id_kategori_barang);
+        
+        if ($kategori->donasi_barang()->exists()) {
+            return redirect()->back()->with('error', 'Gagal! Kategori ini tidak bisa dihapus karena masih terikat dengan aset data donasi barang.');
+        }
+
+        $kategori->delete();
+        // PERBAIKAN AKSI: Diarahkan ke nama route index kategori barang yang valid agar tidak melompat
+        return redirect()->route('admin.kategori_barang.index')->with('success', 'Kategori sukses dihapus dari sistem master.');
     }
 
     /**
@@ -388,7 +482,7 @@ class AdminController extends Controller
             });
         }
 
-        // 4. Logika Penomoran Halaman (Pagination / All Data) sesuai pilihan select box
+        // 4. Logika Penomoran Halaman (Pagination / All Data) sesuai pilihan select box (Aman dikonversi untuk 5 baris)
         if ($perPage === 'all') {
             $audit_list = $query->paginate($query->count() ?: 10)->appends($request->query());
         } else {
@@ -482,7 +576,7 @@ class AdminController extends Controller
             'role'      => $request->role,
         ]);
 
-        return redirect()->route('admin.manajemen_user.index')->with('success', 'Data akun user baru berhasil disimpan ke dalam sistem SOWAN.');
+        return redirect()->route('admin.manajemen_user.index')->with('success', 'Data akun user baru berhasil disimpan ke dalam sistem SEDEKAH.');
     }
 
     /**

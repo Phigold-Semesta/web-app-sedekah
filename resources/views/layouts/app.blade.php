@@ -165,14 +165,15 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kunjungan & Feedback</span>
                     </a>
 
-                    <a href="{{ route('admin.verifikasi') }}" class="nav-item {{ request()->routeIs('admin.verifikasi') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                    <a href="#" class="nav-item {{ request()->routeIs('admin.verifikasi') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Verifikasi Donasi</span>
                     </a>
 
-                    <a href="{{ route('admin.kategori') }}" class="nav-item {{ request()->routeIs('admin.kategori') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                    {{-- DISESUAIKAN & DISEMPURNAKAN: Menyelaraskan nama route ke rute baru kategori_barang dan mendukung status aktif untuk seluruh sub-halaman CRUD --}}
+                    <a href="{{ route('admin.kategori_barang.index') }}" class="nav-item {{ request()->routeIs('admin.kategori_barang.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-tags w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Master Kategori</span>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kategori Barang</span>
                     </a>
 
                     {{-- PERBAIKAN UTAMA: Menyinkronkan rute target menu dan mencakup sub-halaman detail & update status via wildcard (*) --}}

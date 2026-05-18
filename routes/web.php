@@ -57,7 +57,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
         Route::get('/verifikasi', [AdminController::class, 'verifikasi'])->name('verifikasi');
         Route::get('/distribusi', [AdminController::class, 'distribusi'])->name('distribusi');
-        Route::get('/kategori', [AdminController::class, 'kategori'])->name('kategori');
+        
+        // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE MASTER KATEGORI BARANG ---
+        // PERBAIKAN: Mengubah prefix menjadi 'kategori-barang', name menjadi 'kategori_barang.', dan memisahkannya menjadi CRUD halaman terpisah
+        Route::prefix('kategori-barang')->name('kategori_barang.')->group(function () {
+            Route::get('/', [AdminController::class, 'kategori'])->name('index');
+            Route::get('/create', [AdminController::class, 'kategoriCreate'])->name('create');
+            Route::post('/', [AdminController::class, 'kategoriStore'])->name('store');
+            Route::get('/edit/{id_kategori_barang}', [AdminController::class, 'kategoriEdit'])->name('edit');
+            Route::put('/update/{id_kategori_barang}', [AdminController::class, 'kategoriUpdate'])->name('update');
+            Route::delete('/destroy/{id_kategori_barang}', [AdminController::class, 'kategoriDestroy'])->name('destroy');
+        });
         
         // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE KELOLA RIWAYAT DONASI KESELURUHAN ---
         // PERBAIKAN: Menambahkan ->name('riwayat_donasi.') dan mengubah nama sub-route menjadi 'index' agar klop dengan pemanggilan view Blade

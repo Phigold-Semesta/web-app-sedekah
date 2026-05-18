@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen User | SEDEKAH')
+@section('title', 'Master Kategori Barang | SEDEKAH')
 
 @section('content')
 <div class="space-y-8 animate__animated animate__fadeIn">
@@ -8,32 +8,32 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
             <h1 class="text-4xl font-black text-slate-800 dark:text-white tracking-tighter uppercase italic">
-                Manajemen <span class="text-[#008f5d] dark:text-emerald-400">User</span>
+                Master <span class="text-[#008f5d] dark:text-emerald-400">Kategori Barang</span>
             </h1>
             <div class="flex items-center gap-2 mt-1">
-                <span class="h-1 w-8 bg-[#008f5d] dark:bg-emerald-500 rounded-full"></span>
+                <span class="h-1 w-8 bg-[#008f5d] dark:bg-emerald-50 rounded-full"></span>
                 <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
-                    Sistem Digital Pengelolaan Berbagi dan Amal Keberkahan
+                    Sistem Otomasi Warta Administrasi Normatif LPSE Karawang
                 </p>
             </div>
         </div>
-        <a href="{{ route('direktur.manajemen_user.create') }}" 
+        <a href="{{ route('admin.kategori_barang.create') }}" 
            class="inline-flex items-center px-8 py-4 bg-[#008f5d] dark:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-[2rem] hover:bg-emerald-700 dark:hover:bg-emerald-500 hover:shadow-[0_15px_30px_rgba(0,143,93,0.3)] transition-all duration-300 group shrink-0 shadow-xl">
-            <i class="fas fa-user-plus mr-2 group-hover:scale-110 transition-transform"></i>
-            Tambah User Baru
+            <i class="fas fa-plus-circle mr-2 group-hover:scale-110 transition-transform"></i>
+            Tambah Kategori
         </a>
     </div>
 
     {{-- Filter & Search Section --}}
     <div class="bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
-        <form action="{{ route('direktur.manajemen_user.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
+        <form action="{{ route('admin.kategori_barang.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
             {{-- Search Input --}}
             <div class="flex-1 relative group">
                 <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] transition-colors">
                     <i class="fas fa-search text-sm"></i>
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Cari identitas user..." 
+                       placeholder="Cari nama kategori barang..." 
                        class="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 transition-all placeholder:text-slate-400">
             </div>
 
@@ -45,25 +45,14 @@
                         <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5 Baris</option>
                         <option value="10" {{ request('per_page') == '10' || !request('per_page') ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
+                        <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50 Baris</option>
                         <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua Data</option>
                     </select>
                     <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
                 </div>
 
-                {{-- Filter Role --}}
-                <div class="relative">
-                    <select name="role" onchange="this.form.submit()"
-                            class="pl-6 pr-10 py-4 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 appearance-none cursor-pointer">
-                        <option value="">Semua Role</option>
-                        <option value="administrator" {{ request('role') == 'administrator' ? 'selected' : '' }}>Administrator</option>
-                        <option value="direktur" {{ request('role') == 'direktur' ? 'selected' : '' }}>Direktur</option>
-                        <option value="petugas" {{ request('role') == 'petugas' ? 'selected' : '' }}>Petugas</option>
-                    </select>
-                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
-                </div>
-
                 <button type="submit" class="px-8 py-4 bg-emerald-100 dark:bg-emerald-900/30 text-[#008f5d] dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-[#008f5d] hover:text-white transition-all duration-300 shadow-sm active:scale-95">
-                    <i class="fas fa-filter mr-2"></i> Apply
+                    <i class="fas fa-filter mr-2"></i> Apply Filter
                 </button>
             </div>
         </form>
@@ -74,100 +63,64 @@
         <table class="w-full border-separate border-spacing-y-4">
             <thead>
                 <tr class="text-[#008f5d] dark:text-emerald-400 text-[10px] font-black uppercase tracking-[0.3em] italic">
-                    <th class="px-8 py-2 text-left">Nama Lengkap & ID User</th>
-                    <th class="px-8 py-2 text-center">Username Credential</th>
-                    <th class="px-8 py-2 text-center">Hak Akses Role</th>
-                    <th class="px-8 py-2 text-center">Aksi Manajemen</th>
+                    <th class="px-8 py-2 text-left" style="width: 120px;">ID Kategori</th>
+                    <th class="px-8 py-2 text-left">Nama Kategori Barang</th>
+                    <th class="px-8 py-2 text-center" style="width: 200px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($user_list as $user) 
+                @forelse($kategori as $item) 
                 <tr class="bg-white dark:bg-slate-900 shadow-xl shadow-emerald-900/5 group transition-all hover:scale-[1.01]">
-                    {{-- Avatar & Nama --}}
-                    <td class="px-8 py-6 rounded-l-[2.5rem] border-y border-l border-emerald-50 dark:border-slate-800 text-left">
-                        <div class="flex items-center gap-4">
-                            <div class="relative">
-                                <div class="w-12 h-12 bg-gradient-to-tr from-emerald-100 to-white dark:from-emerald-900 dark:to-slate-800 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-black italic uppercase shadow-sm border border-emerald-50 dark:border-slate-700">
-                                    {{ substr($user->nama_user, 0, 1) }}
-                                </div>
-                                @if(Auth::id() == $user->id_user)
-                                    <span class="absolute -top-1 -right-1 flex h-4 w-4">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
-                                    </span>
-                                @endif
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight group-hover:text-[#008f5d] transition-colors">
-                                    {{ $user->nama_user }}
-                                </span>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">User ID #{{ str_pad($user->id_user, 3, '0', STR_PAD_LEFT) }}</span>
-                            </div>
-                        </div>
-                    </td>
-
-                    {{-- Username --}}
-                    <td class="px-8 py-6 border-y border-emerald-50 dark:border-slate-800 text-center">
-                        <div class="flex justify-center">
-                            <span class="text-[11px] font-black text-[#008f5d] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800/30 w-fit tracking-wide">
-                                @ {{ $user->username }}
+                    {{-- ID Kategori --}}
+                    <td class="px-8 py-6 rounded-l-[2.5rem] border-y border-l border-emerald-50 dark:border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black text-slate-400 uppercase tracking-widest italic">
+                                #{{ str_pad($item->id_kategori_barang, 3, '0', STR_PAD_LEFT) }}
                             </span>
                         </div>
                     </td>
 
-                    {{-- Role Badge --}}
-                    <td class="px-8 py-6 border-y border-emerald-50 dark:border-slate-800 text-center">
-                        @php
-                            $roleClasses = [
-                                'administrator' => 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/30',
-                                'petugas' => 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30',
-                                'direktur' => 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30',
-                            ];
-                            $class = $roleClasses[strtolower($user->role)] ?? 'bg-slate-50 text-slate-600 border-slate-100';
-                        @endphp
-                        <div class="flex justify-center">
-                            <span class="inline-flex items-center text-[9px] font-black uppercase tracking-[0.15em] px-4 py-2 rounded-xl border {{ $class }} italic shadow-sm">
-                                <i class="fas fa-shield-halved mr-1.5 opacity-70"></i>
-                                {{ $user->role }}
+                    {{-- Nama Kategori --}}
+                    <td class="px-8 py-6 border-y border-emerald-50 dark:border-slate-800">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight group-hover:text-[#008f5d] transition-colors">
+                                {{ $item->nama_kategori }}
                             </span>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic mt-0.5">Klasifikasi Logistik</span>
                         </div>
                     </td>
 
                     {{-- Action Buttons --}}
                     <td class="px-8 py-6 rounded-r-[2.5rem] border-y border-r border-emerald-50 dark:border-slate-800 text-center">
                         <div class="flex justify-center gap-3">
-                            <a href="{{ route('direktur.manajemen_user.show', $user->id_user) }}" 
-                               title="Detail User"
-                               class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-[#008f5d] hover:text-white transition-all shadow-sm active:scale-90">
-                                <i class="fas fa-eye text-xs"></i>
-                            </a>
-                            <a href="{{ route('direktur.manajemen_user.edit', $user->id_user) }}" 
-                               title="Edit User"
+                            {{-- Edit Button --}}
+                            <a href="{{ route('admin.kategori_barang.edit', $item->id_kategori_barang) }}" 
+                               title="Edit Kategori"
                                class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-amber-500 hover:text-white transition-all shadow-sm active:scale-90">
-                                <i class="fas fa-user-edit text-xs"></i>
+                                <i class="fas fa-edit text-xs"></i>
                             </a>
-                            @if(Auth::id() != $user->id_user)
-                            <form action="{{ route('direktur.manajemen_user.destroy', $user->id_user) }}" method="POST" class="inline delete-form">
+                            
+                            {{-- Delete Form & Button --}}
+                            <form id="delete-form-{{ $item->id_kategori_barang }}" action="{{ route('admin.kategori_barang.destroy', $item->id_kategori_barang) }}" method="POST" class="inline delete-form">
                                 @csrf
                                 @method('DELETE')
                                 <button type="button" 
-                                        onclick="confirmDelete('{{ $user->id_user }}', '{{ $user->nama_user }}')"
+                                        onclick="confirmDelete('{{ $item->id_kategori_barang }}', '{{ $item->nama_kategori }}')"
                                         class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-90">
                                     <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                             </form>
-                            @endif
                         </div>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="px-8 py-20 text-center">
+                    <td colspan="3" class="px-8 py-20 text-center">
                         <div class="flex flex-col items-center">
                             <div class="w-20 h-20 bg-slate-50 dark:bg-slate-900/50 rounded-3xl flex items-center justify-center text-slate-200 dark:text-slate-700 mb-4 border border-slate-100 dark:border-slate-800">
-                                <i class="fas fa-users-slash text-3xl"></i>
+                                <i class="fas fa-tags text-3xl"></i>
                             </div>
-                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">No users found in the system</p>
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Tidak ada kategori barang yang ditemukan dalam sistem</p>
                         </div>
                     </td>
                 </tr>
@@ -177,18 +130,18 @@
     </div>
 
     {{-- Custom Pagination Section --}}
-    @if(method_exists($user_list, 'hasPages') && $user_list->hasPages())
+    @if($kategori instanceof \Illuminate\Pagination\LengthAwarePaginator && $kategori->hasPages())
     <div class="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
         <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest italic">
-            Showing <span class="text-[#008f5d] dark:text-emerald-400">{{ $user_list->firstItem() }}</span> to <span class="text-[#008f5d] dark:text-emerald-400">{{ $user_list->lastItem() }}</span> of {{ $user_list->total() }} Users
+            Showing <span class="text-[#008f5d] dark:text-emerald-400">{{ $kategori->firstItem() }}</span> to <span class="text-[#008f5d] dark:text-emerald-400">{{ $kategori->lastItem() }}</span> of {{ $kategori->total() }} Entities
         </div>
         <div class="pagination-container">
-            {{ $user_list->appends(request()->query())->links('pagination::tailwind') }}
+            {{ $kategori->appends(request()->query())->links('pagination::tailwind') }}
         </div>
     </div>
     @elseif(request('per_page') == 'all')
     <div class="mt-6 bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 text-center">
-        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Menampilkan Semua Data ({{ $user_list->count() }} User)</p>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Menampilkan Semua Data ({{ $kategori->count() }} Kategori)</p>
     </div>
     @endif
 </div>
@@ -201,7 +154,7 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #008f5d; }
 
     /* Gaya Pagination Kustom */
-    .pagination-container nav > div:first-child { display: none; }
+    .pagination-container nav > div:first-child { display: none; } 
     
     .pagination-container nav span[aria-current="page"] > span {
         background-color: #008f5d !important;
@@ -225,7 +178,7 @@
         transition: all 0.3s ease;
     }
 
-    .dark .pagination-container nav a,
+    .dark .pagination-container nav a, 
     .dark .pagination-container nav span:not([aria-current="page"] > span) {
         background-color: #0f172a;
         color: #94a3b8;
@@ -245,12 +198,49 @@
 
 <script>
     /**
-     * Konfirmasi Hapus dengan SweetAlert2
+     * SweetAlert2 Notifikasi Otomatis untuk Create/Edit/Delete Kategori
+     */
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(session('success'))
+            Swal.fire({
+                title: 'BERHASIL!',
+                text: "{{ session('success') }}",
+                icon: 'success',
+                background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fff' : '#1e293b',
+                borderRadius: '2rem',
+                confirmButtonColor: '#008f5d',
+                customClass: {
+                    title: 'font-black italic tracking-tighter',
+                    confirmButton: 'rounded-xl font-black text-xs tracking-widest px-6 py-3 uppercase'
+                }
+            });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({
+                title: 'GAGAL!',
+                text: "{{ session('error') }}",
+                icon: 'error',
+                background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fff' : '#1e293b',
+                borderRadius: '2rem',
+                confirmButtonColor: '#ef4444',
+                customClass: {
+                    title: 'font-black italic tracking-tighter',
+                    confirmButton: 'rounded-xl font-black text-xs tracking-widest px-6 py-3 uppercase'
+                }
+            });
+        @endif
+    });
+
+    /**
+     * Konfirmasi Hapus Kategori Eksklusif dengan SweetAlert2
      */
     function confirmDelete(id, name) {
         Swal.fire({
-            title: 'HAPUS USER?',
-            html: `Anda akan menghapus <b>${name}</b>.<br><span class="text-xs text-red-500 font-bold uppercase italic mt-2">Tindakan ini tidak dapat dibatalkan!</span>`,
+            title: 'HAPUS KATEGORI?',
+            html: `Anda akan menghapus kategori <b>${name}</b>.<br><span class="text-xs text-red-500 font-bold uppercase italic mt-2">Peringatan: Semua stok barang terkait mungkin akan terpengaruh!</span>`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
@@ -262,13 +252,15 @@
             borderRadius: '2rem',
             customClass: {
                 title: 'font-black italic tracking-tighter',
-                confirmButton: 'rounded-xl font-black text-xs tracking-widest',
-                cancelButton: 'rounded-xl font-black text-xs tracking-widest'
+                confirmButton: 'rounded-xl font-black text-xs tracking-widest px-6 py-3',
+                cancelButton: 'rounded-xl font-black text-xs tracking-widest px-6 py-3'
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                const form = document.querySelector(`form[action*="${id}"]`);
-                if(form) form.submit();
+                const targetForm = document.getElementById('delete-form-' + id);
+                if (targetForm) {
+                    targetForm.submit();
+                }
             }
         });
     }
