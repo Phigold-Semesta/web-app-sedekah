@@ -96,6 +96,13 @@ Route::middleware(['auth'])->group(function () {
         // PERBAIKAN: Menyelaraskan name route menjadi 'audit_log.index' agar klop dengan pemanggilan view dan layout sidebar admin
         Route::get('/audit-log', [AdminController::class, 'audit'])->name('audit_log.index');
 
+        // --- TAMBAHAN BARU: MODUL MONITORING RATING KUNJUNGAN ---
+        // Menghubungkan form rating layanan ulasan donatur dari scan QR Code secara real-time
+        Route::get('/rating-kunjungan', [AdminController::class, 'rating_kunjungan'])->name('rating_kunjungan.index');
+        
+        // PERBAIKAN & PENYEMPURNAAN: Menambahkan rute POST untuk memproses form simpan tanggapan/respon ulasan admin agar klop dengan form modal Blade
+        Route::post('/rating-kunjungan/{id_rating}/tanggapan', [AdminController::class, 'simpan_tanggapan'])->name('rating_kunjungan.tanggapan');
+
         // --- TAMBAHAN BARU & PENYEMPURNAAN LENGKAP: RUTE MANAJEMEN USER (AKTOR ADMINISTRATOR) ---
         // Melengkapi seluruh rute aksi form agar desain halaman CRUD tidak pecah/melompat ke role lain
         Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {

@@ -10,9 +10,10 @@ use App\Models\User; // Ditambahkan untuk memanipulasi data tabel user secara di
 use App\Models\Donatur; // DISINKRONKAN: Memanggil Model Donatur tanpa huruf S jamak di ujung kata
 use App\Models\Donasi; // DISINKRONKAN: Memanggil Model Donasi untuk riwayat transaksi gabungan
 use App\Models\KategoriBarang; // DISINKRONKAN: Memanggil Model KategoriBarang untuk pengelolaan master logistik barang
+use App\Models\Penilaian; // DISINKRONKAN: Memanggil Model Penilaian untuk modul ulasan rating kunjungan donatur
 use App\Exports\DonasiKeseluruhanExport; // DISINKRONKAN: Memanggil class export Maatwebsite Excel
 use Maatwebsite\Excel\Facades\Excel; // DISINKRONKAN: Memanggil Facade Laravel Excel untuk trigger download
-use Illuminate\Support\Facades\Hash; // Ditambahkan untuk enkripsi password manual SOWAN v2
+use Illuminate\Support\Facades\Hash; // Ditambahkan untuk enkripsi password manual aplikasi SEDEKAH
 use Illuminate\Support\Facades\Auth; // Ditambahkan untuk proteksi delete-self akun aktif
 use Illuminate\Support\Facades\DB; // DIKUKUHKAN: Untuk mengelola query tabel donatur secara aman
 
@@ -209,7 +210,7 @@ class AdminController extends Controller
      * Master Data Donatur.
      * DISEMPURNAKAN & DIHIDUPKAN: Mengelola data profil donatur secara dinamis dengan fitur Search dan Pagination.
      * REVISI DIREKTORI VIEW: Diarahkan dengan presisi ke folder 'admin.kelola_donatur.index'
-     * PENYELARASAN: Mengubah nama variabel penampung menjadi $donaturs agar terbaca oleh komponen view Blade.
+     * PENYELARASAN: Mengubah nama variabel penampung menjadi $donatur_list tanpa huruf s jamak agar konsisten dengan preferensi bahasa Indonesia Anda.
      */
     public function donatur(Request $request): View
     {
@@ -231,13 +232,13 @@ class AdminController extends Controller
 
         // 4. Logika Pagination / Menampilkan seluruh data sesuai kebutuhan filter (Mendukung opsi 5 baris)
         if ($perPage === 'all') {
-            $donaturs = $query->orderBy('id_donatur', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
+            $donatur_list = $query->orderBy('id_donatur', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
         } else {
-            $donaturs = $query->orderBy('id_donatur', 'desc')->paginate((int)$perPage)->appends($request->query());
+            $donatur_list = $query->orderBy('id_donatur', 'desc')->paginate((int)$perPage)->appends($request->query());
         }
 
-        // Mengembalikan view utama dengan membawa variabel $donaturs agar klop dengan @forelse di Blade
-        return view('admin.kelola_donatur.index', compact('donaturs'));
+        // Mengembalikan view utama dengan membawa variabel $donatur_list agar klop dengan @forelse di Blade
+        return view('admin.kelola_donatur.index', compact('donatur_list'));
     }
 
     /**
@@ -411,7 +412,7 @@ class AdminController extends Controller
     /**
      * Form Edit Master Data Kategori (Edit).
      * DISINKRONKAN: Mengambil data tunggal kategori untuk dimuat ke dalam rancangan form edit.
-     * SINKRONISASI PARAMETER: Variabel penangkap diselaraskan menjadi $id_kategori_barang agar cocok dengan Route
+     * SINKRONISASI PARAMETER: Variabel penanggap diselaraskan menjadi $id_kategori_barang agar cocok dengan Route
      */
     public function kategoriEdit(string|int $id_kategori_barang): View
     {
@@ -572,7 +573,7 @@ class AdminController extends Controller
         User::create([
             'nama_user' => $request->nama_user,
             'username'  => $request->username,
-            'password'  => Hash::make($request->password), // Enkripsi manual tanpa Breeze/Fortify
+            'password'  => Hash::make($request->password), // Enkripsi manual untuk aplikasi SEDEKAH
             'role'      => $request->role,
         ]);
 
@@ -649,6 +650,47 @@ class AdminController extends Controller
         $user = User::findOrFail($id_user);
         $user->delete();
 
-        return redirect()->route('admin.manajemen_user.index')->with('success', 'Akses data akun pengguna ' . $user->nama_user . ' berhasil deleted permanen dari sistem.');
+        return redirect()->route('admin.manajemen_user.index')->with('success', 'Akses data akun pengguna ' . $user->nama_user . ' berhasil didelete permanen dari sistem.');
+    }
+
+    /**
+     * --- BARU & DISEMPURNAKAN: Modul Rating Kunjungan Layanan ---
+     * Menampilkan daftar feedback kepuasan donatur dari scan QR Code secara real-time.
+     * Menerapkan teknik Eager Loading untuk mencegah problem N+1 query.
+     */
+    public function rating_kunjungan(Request $request): View
+    {
+        // 1. Ambil parameter filter dari form Blade view
+        $search = $request->input('search');
+        $ratingFilter = $request->input('skor_rating');
+        $perPage = $request->input('per_page', 10);
+
+        // 2. Load query dasar model Penilaian yang diikat langsung ke relasi kunjungan & donatur
+        $query = Penilaian::with(['kunjungan.donatur']);
+
+        // 3. Logika Fitur Pencarian Global (Berdasarkan nama donatur atau isi teks saran feedback)
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('saran', 'LIKE', "%{$search}%")
+                  ->orWhereHas('kunjungan.donatur', function ($donaturQuery) use ($search) {
+                      $donaturQuery->where('nama_donatur', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        // 4. SINKRONISASI LOGIKA FILTER: Menggunakan kolom 'skor_rating' yang sesuai dengan struktur model murni Penilaian
+        if ($ratingFilter) {
+            $query->where('skor_rating', $ratingFilter);
+        }
+
+        // 5. Eksekusi Pagination Dinamis Data Urut Terbaru Berdasarkan 'id_penilaian' (Mendukung opsi 5 baris)
+        if ($perPage === 'all') {
+            $rating_list = $query->orderBy('id_penilaian', 'desc')->paginate($query->count() ?: 10)->appends($request->query());
+        } else {
+            $rating_list = $query->orderBy('id_penilaian', 'desc')->paginate((int)$perPage)->appends($request->query());
+        }
+
+        // Mengembalikan view utama sesuai struktur folder murni bahasa Indonesia tanpa akhiran 's' jamak
+        return view('admin.rating_kunjungan.index', compact('rating_list'));
     }
 }
