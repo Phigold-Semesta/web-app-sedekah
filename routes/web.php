@@ -52,11 +52,14 @@ Route::middleware(['auth'])->group(function () {
         return redirect('/')->with('error', 'Role tidak dikenali oleh sistem.');
     })->name('dashboard');
 
-    // --- GRUP RUTE ADMINISTRATOR / PETUGAS ---
+    // --- GRUP RUTE ADMINISTRATOR ---
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-        Route::get('/verifikasi', [AdminController::class, 'verifikasi'])->name('verifikasi');
-        Route::get('/distribusi', [AdminController::class, 'distribusi'])->name('distribusi');
+      // --- MENU VERIFIKASI DONASI ---
+        Route::prefix('verifikasi')->name('verifikasi.')->group(function () {
+            Route::get('/', [AdminController::class, 'verifikasi_index'])->name('index');
+            Route::post('/update/{id_donasi}', [AdminController::class, 'verifikasi_update'])->name('update');
+        });
         
         // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE MASTER KATEGORI BARANG ---
         // PERBAIKAN: Mengubah prefix menjadi 'kategori-barang', name menjadi 'kategori_barang.', dan memisahkannya menjadi CRUD halaman terpisah

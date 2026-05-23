@@ -166,10 +166,11 @@
     <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Rating Kunjungan</span>
 </a>
 
-                    <a href="#" class="nav-item {{ request()->routeIs('admin.verifikasi') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-                        <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Verifikasi Donasi</span>
-                    </a>
+                   <a href="{{ route('admin.verifikasi.index') }}" 
+   class="nav-item {{ request()->routeIs('admin.verifikasi.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Verifikasi Donasi</span>
+</a>
 
                     {{-- DISESUAIKAN & DISEMPURNAKAN: Menyelaraskan nama route ke rute baru kategori_barang dan mendukung status aktif untuk seluruh sub-halaman CRUD --}}
                     <a href="{{ route('admin.kategori_barang.index') }}" class="nav-item {{ request()->routeIs('admin.kategori_barang.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">

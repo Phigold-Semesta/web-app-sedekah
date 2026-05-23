@@ -1,10 +1,11 @@
-@extends('layouts.app') {{-- Sesuaikan dengan nama file layout utama Anda --}}
+@extends('layouts.app')
 
 @section('title', 'Kelola Data Donatur')
 @section('page_title', 'Kelola Data Donatur')
 
 @section('content')
 <div class="space-y-8 animate-fade-in">
+    {{-- Header Section --}}
     <div class="bg-gradient-to-r from-[#065f46] to-[#008f5d] rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 text-white/5 text-9xl font-black">
             <i class="fas fa-user-friends"></i>
@@ -37,6 +38,7 @@
         </div>
     </div>
 
+    {{-- Alert Messages --}}
     @if(session('success'))
         <script>
             Swal.fire({
@@ -65,6 +67,7 @@
         </script>
     @endif
 
+    {{-- Table Section --}}
     <div class="overflow-x-auto pb-4">
         <table class="w-full border-separate border-spacing-y-3 text-left">
             <thead>
@@ -76,7 +79,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($donaturs as $donatur)
+                @forelse($donatur_list as $donatur)
                     <tr class="bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 rounded-3xl transition-all duration-300 hover:scale-[1.01] hover:shadow-xl group">
                         <td class="py-5 pl-6 rounded-l-[2rem] text-center">
                             <img src="https://ui-avatars.com/api/?name={{ urlencode($donatur->nama_donatur) }}&background=008f5d&color=fff&bold=true" 
@@ -145,8 +148,9 @@
         </table>
     </div>
 
+    {{-- Pagination --}}
     <div class="mt-4">
-        {{ $donaturs->links() }}
+        {{ $donatur_list->links() }}
     </div>
 </div>
 

@@ -693,4 +693,43 @@ class AdminController extends Controller
         // Mengembalikan view utama sesuai struktur folder murni bahasa Indonesia tanpa akhiran 's' jamak
         return view('admin.rating_kunjungan.index', compact('rating_list'));
     }
+
+    /**
+ * Menampilkan halaman verifikasi donasi (status: Pending).
+ */
+public function verifikasi_index(): View
+{
+    // Mengambil donasi dengan relasi ke donatur dan detail donasi
+    $donasi_list = Donasi::with(['kunjungan.donatur', 'donasi_uang', 'donasi_barang'])
+        ->where('status_donasi', 'Pending')
+        ->orderBy('id_donasi', 'desc')
+        ->get();
+        
+    return view('admin.verifikasi_donasi.index', compact('donasi_list'));
+}
+
+/**
+ * Memproses update status donasi (Contoh: Menjadi Selesai atau Ditolak).
+ */
+public function verifikasi_update(Request $request, string|int $id_donasi): RedirectResponse
+{
+    $donasi = Donasi::where('id_donasi', $id_donasi)->firstOrFail();
+    
+    // Validasi status yang diizinkan
+    $request->validate([
+        'status' => 'required|in:Selesai,Ditolak'
+    ]);
+
+    // Update status dan catat siapa admin yang memprosesnya
+    $donasi->update([
+        'status_donasi' => $request->status,
+        'id_user' => Auth::id()
+    ]);
+
+    // Opsional: Tambahkan log audit jika Anda ingin melacak jejak admin
+    // AuditLog::create(['id_user' => Auth::id(), 'aksi_log' => "Verifikasi donasi ID: $id_donasi"]);
+
+    return redirect()->route('admin.verifikasi.index')->with('success', 'Donasi berhasil diverifikasi.');
+}
+
 }
