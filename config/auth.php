@@ -40,6 +40,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Tambahkan guard donatur di sini
+        'donatur' => [
+            'driver' => 'session',
+            'provider' => 'donatur',
+        ],
     ],
 
     /*
@@ -65,10 +71,11 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        // Tambahkan provider donatur di sini
+        'donatur' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Donatur::class,
+        ],
     ],
 
     /*
@@ -94,6 +101,14 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        // Opsional: Tambahkan broker password untuk donatur jika diperlukan nanti
+        'donatur' => [
+            'provider' => 'donatur',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

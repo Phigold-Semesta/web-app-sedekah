@@ -2,19 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+// Perlu ditambahkan untuk otentikasi
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
-class Donatur extends Model
+class Donatur extends Authenticatable
 {
+    use Notifiable;
+
     protected $table = 'donatur'; 
     protected $primaryKey = 'id_donatur'; 
 
+    // Ditambahkan email dan password agar bisa diisi (mass assignment)
     protected $fillable = [
         'nama_donatur',
         'no_hp',
         'alamat',
+        'email',
+        'password',
+    ];
+
+    // Password disembunyikan agar tidak muncul saat model di-serialize
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     /**
@@ -28,18 +41,16 @@ class Donatur extends Model
 
     /**
      * DISEMPURNAKAN: Relasi ke Donasi Uang
-     * Memperbaiki bug key mismatch dengan menggunakan hasManyThrough dari model Donasi
-     * Jalur aman: Donatur -> Kunjungan -> Donasi -> DonasiUang
      */
     public function donasi_uang()
     {
         return $this->hasManyThrough(
             DonasiUang::class,
             Donasi::class,
-            'id_kunjungan', // Foreign key di tabel Donasi (melalui Kunjungan)
-            'id_donasi',    // Foreign key di tabel DonasiUang
-            'id_donatur',   // Local key di tabel Donatur
-            'id_donasi'     // Local key di tabel Donasi
+            'id_kunjungan', 
+            'id_donasi',    
+            'id_donatur',   
+            'id_donasi'     
         )->whereIn('donasi.id_kunjungan', function($query) {
             $query->select('id_kunjungan')->from('kunjungan')->whereColumn('id_donatur', 'donatur.id_donatur');
         });
@@ -47,18 +58,16 @@ class Donatur extends Model
 
     /**
      * DISEMPURNAKAN: Relasi ke Donasi Barang
-     * Memperbaiki bug key mismatch dengan menggunakan hasManyThrough dari model Donasi
-     * Jalur aman: Donatur -> Kunjungan -> Donasi -> DonasiBarang
      */
     public function donasi_barang()
     {
         return $this->hasManyThrough(
             DonasiBarang::class,
             Donasi::class,
-            'id_kunjungan', // Foreign key di tabel Donasi (melalui Kunjungan)
-            'id_donasi',    // Foreign key di tabel DonasiBarang
-            'id_donatur',   // Local key di tabel Donatur
-            'id_donasi'     // Local key di tabel Donasi
+            'id_kunjungan', 
+            'id_donasi',    
+            'id_donatur',   
+            'id_donasi'     
         )->whereIn('donasi.id_kunjungan', function($query) {
             $query->select('id_kunjungan')->from('kunjungan')->whereColumn('id_donatur', 'donatur.id_donatur');
         });
@@ -66,7 +75,6 @@ class Donatur extends Model
 
     /**
      * FITUR TAMBAHAN: Helper untuk menghitung total donasi secara akurat 
-     * melewati jalur: Donatur -> Kunjungan -> Donasi -> Donasi Uang/Barang
      */
     public function scopeWithTotalDonasi($query)
     {
@@ -90,18 +98,17 @@ class Donatur extends Model
     }
 
     /**
-     * DISEMPURNAKAN: Menambahkan relasi HasManyThrough jika ingin mencoba 
-     * akses langsung dari Donatur ke Donasi (Opsional tapi berguna untuk performa)
+     * DISEMPURNAKAN: Menambahkan relasi HasManyThrough akses langsung Donatur ke Donasi
      */
     public function donasi()
     {
         return $this->hasManyThrough(
             Donasi::class,
             Kunjungan::class,
-            'id_donatur', // Foreign key di tabel kunjungan
-            'id_kunjungan', // Foreign key di tabel donasi
-            'id_donatur', // Local key di tabel donatur
-            'id_kunjungan' // Local key di tabel kunjungan
+            'id_donatur', 
+            'id_kunjungan', 
+            'id_donatur', 
+            'id_kunjungan' 
         );
     }
 }

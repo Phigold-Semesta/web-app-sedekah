@@ -83,6 +83,14 @@
                         class="w-full px-6 py-4 text-sm font-bold text-emerald-900 input-pill placeholder:text-emerald-400">
                 </div>
                 <div>
+                    <input type="text" name="no_hp" placeholder="Nomor HP / WhatsApp" value="{{ old('no_hp') }}" required
+                        class="w-full px-6 py-4 text-sm font-bold text-emerald-900 input-pill placeholder:text-emerald-400">
+                </div>
+                <div>
+                    <input type="text" name="alamat" placeholder="Alamat Lengkap" value="{{ old('alamat') }}" required
+                        class="w-full px-6 py-4 text-sm font-bold text-emerald-900 input-pill placeholder:text-emerald-400">
+                </div>
+                <div>
                     <input type="password" name="password" placeholder="Password" required
                         class="w-full px-6 py-4 text-sm font-bold text-emerald-900 input-pill placeholder:text-emerald-400">
                 </div>

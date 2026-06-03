@@ -47,10 +47,6 @@ Route::middleware(['auth'])->group(function () {
 
     /**
      * Logic pengalihan dashboard berdasarkan role.
-     * Menggunakan pengecekan yang lebih fleksibel untuk 'admin' atau 'administrator'.
-     */
-    /**
-     * Logic pengalihan dashboard berdasarkan role.
      * Hanya menangani aktor: Administrator, Direktur, dan Donatur.
      */
     Route::get('/dashboard', function () {
@@ -83,7 +79,6 @@ Route::middleware(['auth'])->group(function () {
         });
         
         // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE MASTER KATEGORI BARANG ---
-        // PERBAIKAN: Mengubah prefix menjadi 'kategori-barang', name menjadi 'kategori_barang.', dan memisahkannya menjadi CRUD halaman terpisah
         Route::prefix('kategori-barang')->name('kategori_barang.')->group(function () {
             Route::get('/', [AdminController::class, 'kategori'])->name('index');
             Route::get('/create', [AdminController::class, 'kategoriCreate'])->name('create');
@@ -94,7 +89,6 @@ Route::middleware(['auth'])->group(function () {
         });
         
         // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE KELOLA RIWAYAT DONASI KESELURUHAN ---
-        // PERBAIKAN: Menambahkan ->name('riwayat_donasi.') dan mengubah nama sub-route menjadi 'index' agar klop dengan pemanggilan view Blade
         Route::prefix('riwayat-donasi')->name('riwayat_donasi.')->group(function () {
             Route::get('/', [AdminController::class, 'riwayat'])->name('index');
             
@@ -106,7 +100,6 @@ Route::middleware(['auth'])->group(function () {
         });
         
         // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE KELOLA DATA DONATUR ---
-        // Menyelaraskan name, prefix, dan parameter {id_donatur} agar klop dengan AdminController
         Route::prefix('donatur')->name('donatur.')->group(function () {
             Route::get('/', [AdminController::class, 'donatur'])->name('index');
             Route::get('/create', [AdminController::class, 'donatur_create'])->name('create');
@@ -121,14 +114,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/audit-log', [AdminController::class, 'audit'])->name('audit_log.index');
 
         // --- TAMBAHAN BARU: MODUL MONITORING RATING KUNJUNGAN ---
-        // Menghubungkan form rating layanan ulasan donatur dari scan QR Code secara real-time
         Route::get('/rating-kunjungan', [AdminController::class, 'rating_kunjungan'])->name('rating_kunjungan.index');
         
         // PERBAIKAN & PENYEMPURNAAN: Menambahkan rute POST untuk memproses form simpan tanggapan/respon ulasan admin agar klop dengan form modal Blade
         Route::post('/rating-kunjungan/{id_rating}/tanggapan', [AdminController::class, 'simpan_tanggapan'])->name('rating_kunjungan.tanggapan');
 
         // --- TAMBAHAN BARU & PENYEMPURNAAN LENGKAP: RUTE MANAJEMEN USER (AKTOR ADMINISTRATOR) ---
-        // Melengkapi seluruh rute aksi form agar desain halaman CRUD tidak pecah/melompat ke role lain
         Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
             Route::get('/', [AdminController::class, 'user_index'])->name('index');
             Route::get('/create', [AdminController::class, 'user_create'])->name('create');
@@ -151,7 +142,6 @@ Route::middleware(['auth'])->group(function () {
         // --- PENYEMPURNAAN RUTE MONITORING DONATUR ---
         Route::prefix('monitoring-donatur')->name('riwayat_donatur.')->group(function () {
             Route::get('/', [DirekturController::class, 'riwayat_donatur'])->name('index');
-            // DISESUAIKAN KLOP DB: Parameter diselaraskan menjadi {id_user} agar seragam mencari entitas profil user
             Route::get('/show/{id_user}', [DirekturController::class, 'donatur_show'])->name('show');
         });
         
@@ -188,4 +178,10 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/destroy/{id_user}', [DirekturController::class, 'user_destroy'])->name('destroy');
         });
     });
+}); 
+
+// --- GRUP RUTE DONATUR (TERPROTEKSI) ---
+// Dikeluarkan dari grup 'auth' agar tidak bentrok dengan guard internal
+Route::middleware(['auth:donatur'])->group(function () {
+    Route::get('/donatur/dashboard', [DonaturController::class, 'dashboard'])->name('donatur.dashboard');
 });

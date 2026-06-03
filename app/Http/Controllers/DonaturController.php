@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Kunjungan;
 use App\Models\Donasi;
-use App\Models\User;
+use App\Models\Donatur; // Menggunakan model Donatur
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,7 +23,8 @@ class DonaturController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        // Menggunakan guard 'donatur'
+        if (Auth::guard('donatur')->attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended('/donatur/dashboard');
         }
@@ -35,23 +36,26 @@ class DonaturController extends Controller
         return view('auth.donatur.signup');
     }
 
-    public function signup(Request $request) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:8|confirmed',
-        ]);
+  public function signup(Request $request) {
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:donatur,email',
+        'password' => 'required|min:8|confirmed',
+        'no_hp' => 'required|string|max:20',
+        'alamat' => 'required|string|max:255', // Tambahkan validasi alamat
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'donatur'
-        ]);
+    $donatur = Donatur::create([
+        'nama_donatur' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'no_hp' => $request->no_hp,
+        'alamat' => $request->alamat, // Simpan alamat
+    ]);
 
-        Auth::login($user);
-        return redirect('/donatur/dashboard');
-    }
+    Auth::guard('donatur')->login($donatur);
+    return redirect('/donatur/dashboard');
+}
 
     // --- AREA DASHBOARD & MEMBER (ONLINE) ---
 
@@ -65,17 +69,14 @@ class DonaturController extends Controller
 
     // --- AREA DONASI ONLINE (MENU SIDEBAR) ---
 
-    // Menampilkan daftar/index halaman donasi
     public function indexDonasi() {
         return view('donatur.donasi.index');
     }
 
-    // Menampilkan form untuk membuat donasi baru
     public function createDonasi() {
         return view('donatur.donasi.create');
     }
 
-    // Proses penyimpanan donasi online
     public function storeDonasi(Request $request) {
         $request->validate([
             'jenis_donasi' => 'required',
@@ -83,7 +84,8 @@ class DonaturController extends Controller
         ]);
 
         Donasi::create([
-            'user_id' => Auth::id(),
+            // Menggunakan id_donatur dari guard yang sedang login
+            'id_donatur' => Auth::guard('donatur')->id(), 
             'jenis_donasi' => $request->jenis_donasi,
             'jumlah' => $request->jumlah,
             'status' => 'pending',
