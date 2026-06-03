@@ -181,7 +181,24 @@ Route::middleware(['auth'])->group(function () {
 }); 
 
 // --- GRUP RUTE DONATUR (TERPROTEKSI) ---
-// Dikeluarkan dari grup 'auth' agar tidak bentrok dengan guard internal
-Route::middleware(['auth:donatur'])->group(function () {
-    Route::get('/donatur/dashboard', [DonaturController::class, 'dashboard'])->name('donatur.dashboard');
+Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(function () {
+    
+    // Dashboard
+    Route::get('/dashboard', [DonaturController::class, 'dashboard'])->name('dashboard');
+
+    // Fitur Donasi (Mengarah ke method di DonaturController)
+    Route::prefix('donasi')->name('donasi.')->group(function () {
+        Route::get('/', [DonaturController::class, 'indexDonasi'])->name('index');
+        Route::get('/create', [DonaturController::class, 'createDonasi'])->name('create');
+        Route::post('/store', [DonaturController::class, 'storeDonasi'])->name('store');
+    });
+
+    // Fitur Kunjungan
+    Route::prefix('kunjungan')->name('kunjungan.')->group(function () {
+        Route::get('/create', [DonaturController::class, 'createKunjungan'])->name('create');
+        Route::post('/store', [DonaturController::class, 'storeKunjungan'])->name('store');
+    });
+
+    // Fitur Riwayat
+    Route::get('/riwayat', [DonaturController::class, 'riwayat'])->name('riwayat.index');
 });

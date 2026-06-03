@@ -50,14 +50,15 @@
                     <i class="fas fa-desktop w-6 text-center"></i>
                     <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Dashboard</span>
                 </a>
-                <a href="#" class="nav-item hover:text-white hover:bg-white/5">
-                    <i class="fas fa-heart w-6 text-center"></i>
-                    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Donasi</span>
-                </a>
-                <a href="#" class="nav-item hover:text-white hover:bg-white/5">
-                    <i class="fas fa-history w-6 text-center"></i>
-                    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat</span>
-                </a>
+               <a href="{{ route('donatur.donasi.index') }}" class="nav-item {{ request()->routeIs('donatur.donasi.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-heart w-6 text-center"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Donasi</span>
+</a>
+
+<a href="{{ route('donatur.riwayat.index') }}" class="nav-item {{ request()->routeIs('donatur.riwayat.index') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-history w-6 text-center"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat Donasi</span>
+</a>
             </nav>
 
             <div class="p-4 mb-4">
