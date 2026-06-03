@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DirekturController;
+use App\Http\Controllers\DonaturController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -18,17 +19,27 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/kunjungan/form', function () {
-    return "Halaman Form Kunjungan & Donasi (Segera Hadir)";
-})->name('donasi.form');
+// Aktor Donatur: Akses Publik (Form Kunjungan & Donasi via QR Code)
+Route::get('/kunjungan/form', [DonaturController::class, 'createKunjungan'])->name('donatur.kunjungan.create');
+Route::post('/kunjungan/simpan', [DonaturController::class, 'storeKunjungan'])->name('donatur.kunjungan.store');
 
-// --- SISTEM AUTENTIKASI MANUAL ---
+// --- SISTEM AUTENTIKASI ---
+
+// Autentikasi Internal (Admin & Direktur)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'index'])->name('login');
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
 });
 
-// Logout harus melalui middleware auth agar secure
+// Autentikasi Donatur (Eksklusif di DonaturController)
+Route::middleware('guest')->group(function () {
+    Route::get('/donatur/login', [DonaturController::class, 'showLogin'])->name('donatur.login');
+    Route::post('/donatur/login', [DonaturController::class, 'login'])->name('donatur.login.proses');
+    Route::get('/donatur/signup', [DonaturController::class, 'showSignup'])->name('donatur.signup');
+    Route::post('/donatur/signup', [DonaturController::class, 'signup'])->name('donatur.signup.proses');
+});
+
+// Logout (Umum untuk semua role)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // --- AKSES INTERNAL TERPROTEKSI ---
@@ -38,15 +49,25 @@ Route::middleware(['auth'])->group(function () {
      * Logic pengalihan dashboard berdasarkan role.
      * Menggunakan pengecekan yang lebih fleksibel untuk 'admin' atau 'administrator'.
      */
+    /**
+     * Logic pengalihan dashboard berdasarkan role.
+     * Hanya menangani aktor: Administrator, Direktur, dan Donatur.
+     */
     Route::get('/dashboard', function () {
         /** @var \App\Models\User $user */
         $user = auth()->user();
         $role = $user->role;
         
-        if (in_array($role, ['admin', 'administrator', 'petugas'])) { 
+        // Cek khusus untuk Aktor Internal
+        if (in_array($role, ['admin', 'administrator'])) { 
             return redirect()->route('admin.dashboard');
         } elseif ($role === 'direktur') {
             return redirect()->route('direktur.dashboard');
+        } 
+        
+        // Cek khusus untuk Aktor Eksternal
+        elseif ($role === 'donatur') {
+            return redirect()->route('donatur.dashboard');
         }
         
         return redirect('/')->with('error', 'Role tidak dikenali oleh sistem.');
