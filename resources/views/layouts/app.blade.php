@@ -10,7 +10,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') | Aplikasi SEDEKAH</title>
+    <title>@yield('page_title', 'Dashboard') | Aplikasi SEDEKAH</title>
     
     <script>
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -160,25 +160,23 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kelola Data Donatur</span>
                     </a>
 
-                  <a href="{{ route('admin.rating_kunjungan.index') }}" 
-   class="nav-item {{ request()->routeIs('admin.rating_kunjungan.*') ? 'text-white bg-white/10 font-bold' : 'text-gray-400 hover:text-white hover:bg-white/5' }} flex items-center px-4 py-3 transition-all duration-200">
-    <i class="fas fa-comments w-6 text-center text-sm {{ request()->routeIs('admin.rating_kunjungan.*') ? 'text-yellow-400' : '' }}"></i>
-    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Rating Kunjungan</span>
-</a>
+                    <a href="{{ route('admin.rating_kunjungan.index') }}" 
+                       class="nav-item {{ request()->routeIs('admin.rating_kunjungan.*') ? 'text-white bg-white/10 font-bold' : 'text-gray-400 hover:text-white hover:bg-white/5' }} flex items-center px-4 py-3 transition-all duration-200">
+                        <i class="fas fa-comments w-6 text-center text-sm {{ request()->routeIs('admin.rating_kunjungan.*') ? 'text-yellow-400' : '' }}"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Rating Kunjungan</span>
+                    </a>
 
-                   <a href="{{ route('admin.verifikasi.index') }}" 
-   class="nav-item {{ request()->routeIs('admin.verifikasi.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-    <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
-    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Verifikasi Donasi</span>
-</a>
+                    <a href="{{ route('admin.verifikasi.index') }}" 
+                       class="nav-item {{ request()->routeIs('admin.verifikasi.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+                        <i class="fas fa-clipboard-check w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Verifikasi Donasi</span>
+                    </a>
 
-                    {{-- DISESUAIKAN & DISEMPURNAKAN: Menyelaraskan nama route ke rute baru kategori_barang dan mendukung status aktif untuk seluruh sub-halaman CRUD --}}
                     <a href="{{ route('admin.kategori_barang.index') }}" class="nav-item {{ request()->routeIs('admin.kategori_barang.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-tags w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kategori Barang</span>
                     </a>
 
-                    {{-- PERBAIKAN UTAMA: Menyinkronkan rute target menu dan mencakup sub-halaman detail & update status via wildcard (*) --}}
                     <a href="{{ route('admin.riwayat_donasi.index') }}" class="nav-item {{ request()->routeIs('admin.riwayat_donasi.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-history w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat Kelola Donasi</span>
@@ -253,7 +251,7 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="flex flex-col">
-                        <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.3em] italic leading-none mb-1">DNA PROJECT</p>
+                        <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.3em] italic leading-none mb-1">Yayasan Rumah Harapan </p>
                         <h2 class="text-slate-800 dark:text-white font-black text-xl tracking-tighter uppercase italic">
                             @yield('page_title', 'Dashboard')
                         </h2>

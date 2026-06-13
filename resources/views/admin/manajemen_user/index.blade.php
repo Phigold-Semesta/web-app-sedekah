@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen User | SEDEKAH')
+@section('page_title', 'Halaman Manajemen User')
 
 @section('content')
 <div class="space-y-8 animate__animated animate__fadeIn">

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Audit Log Admin | SEDEKAH')
+@section('page_title', 'Halaman Audit Log')
 
 @section('content')
 <div class="space-y-8 animate__animated animate__fadeIn">
@@ -8,7 +8,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
             <h1 class="text-4xl font-black text-slate-800 dark:text-white tracking-tighter uppercase italic">
-                Audit <span class="text-[#008f5d] dark:text-emerald-400">Log Admin</span>
+                Audit <span class="text-[#008f5d] dark:text-emerald-400">Log</span>
             </h1>
             <div class="flex items-center gap-2 mt-1">
                 <span class="h-1 w-8 bg-[#008f5d] dark:bg-emerald-500 rounded-full"></span>
