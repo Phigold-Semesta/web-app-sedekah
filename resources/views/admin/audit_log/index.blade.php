@@ -33,24 +33,22 @@
     {{-- Filter & Search Section --}}
     <div class="bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
         <form action="{{ route('admin.audit_log.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
-            {{-- Search Input --}}
             <div class="flex-1 relative group">
                 <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] transition-colors">
                     <i class="fas fa-search text-sm"></i>
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Cari aktivitas log admin..." 
+                       placeholder="Cari aktivitas atau IP address..." 
                        class="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 transition-all placeholder:text-slate-400">
             </div>
 
             <div class="flex flex-wrap gap-3">
-                {{-- Filter Baris --}}
                 <div class="relative">
                     <select name="per_page" onchange="this.form.submit()"
                             class="pl-6 pr-10 py-4 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 appearance-none cursor-pointer">
+                        <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5 Baris</option>
                         <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
-                        <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50 Baris</option>
                         <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua Data</option>
                     </select>
                     <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
@@ -76,60 +74,42 @@
                 <tr class="text-[#008f5d] dark:text-emerald-400 text-[10px] font-black uppercase tracking-[0.3em] italic">
                     <th class="px-8 py-2 text-left">Timeline</th>
                     <th class="px-8 py-2 text-left">Actor Identity</th>
-                    <th class="px-8 py-2 text-left">Log Activity Details</th>
+                    <th class="px-8 py-2 text-left">Deskripsi Aktivitas</th>
+                    <th class="px-8 py-2 text-left">IP Address</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($audit_list as $log)
                 <tr class="bg-white dark:bg-slate-900 shadow-xl shadow-emerald-900/5 group transition-all hover:scale-[1.01]">
-                    {{-- Timestamp --}}
                     <td class="px-8 py-6 rounded-l-[2.5rem] border-y border-l border-emerald-50 dark:border-slate-800">
-                        <div class="flex flex-col">
-                            <span class="text-sm font-black text-slate-800 dark:text-white tracking-tight">
-                                {{ \Carbon\Carbon::parse($log->waktu_log)->format('d M Y') }}
-                            </span>
-                            <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest italic">
-                                {{ \Carbon\Carbon::parse($log->waktu_log)->format('H:i:s') }} WIB
-                            </span>
-                        </div>
+                        <span class="text-sm font-black text-slate-800 dark:text-white">{{ \Carbon\Carbon::parse($log->waktu_log)->format('d M Y') }}</span>
+                        <span class="block text-[9px] font-bold text-emerald-500 uppercase tracking-widest italic">{{ \Carbon\Carbon::parse($log->waktu_log)->format('H:i:s') }} WIB</span>
                     </td>
-
-                    {{-- Pelaku --}}
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-slate-800">
                         <div class="flex items-center gap-4">
                             <div class="w-10 h-10 bg-gradient-to-tr from-[#008f5d] to-emerald-400 rounded-xl flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/20">
                                 {{ strtoupper(substr($log->user->nama_user ?? 'A', 0, 1)) }}
                             </div>
-                            <div class="flex flex-col">
-                                <span class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-tight group-hover:text-[#008f5d] transition-colors">
-                                    {{ $log->user->nama_user ?? 'System/Internal' }}
-                                </span>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">
-                                    {{ $log->user->role ?? 'Access Point' }}
-                                </span>
+                            <div>
+                                <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase">{{ $log->user->nama_user ?? 'System' }}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">{{ $log->user->role ?? 'Internal' }}</p>
                             </div>
                         </div>
                     </td>
-
-                    {{-- Aktivitas --}}
+                    <td class="px-8 py-6 border-y border-emerald-50 dark:border-slate-800">
+                        <p class="text-[12px] font-bold text-slate-700 dark:text-slate-300 italic">{{ $log->deskripsi ?? $log->aksi_log }}</p>
+                    </td>
                     <td class="px-8 py-6 rounded-r-[2.5rem] border-y border-r border-emerald-50 dark:border-slate-800">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></div>
-                            <p class="text-[13px] text-slate-700 dark:text-slate-300 font-bold leading-relaxed tracking-tight group-hover:text-slate-900 dark:group-hover:text-white transition-colors italic">
-                                "{{ $log->aksi_log }}"
-                            </p>
-                        </div>
+                        {{-- IP Address dengan highlight emerald green dan icon sidik jari --}}
+                        <span class="text-[10px] font-mono font-black text-[#008f5d] bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-300 px-4 py-2 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                            <i class="fas fa-fingerprint mr-1"></i> {{ $log->ip_address ?? 'N/A' }}
+                        </span>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="3" class="px-8 py-20 text-center">
-                        <div class="flex flex-col items-center">
-                            <div class="w-20 h-20 bg-slate-50 dark:bg-slate-900/50 rounded-3xl flex items-center justify-center text-slate-200 dark:text-slate-700 mb-4 border border-slate-100 dark:border-slate-800">
-                                <i class="fas fa-database text-3xl"></i>
-                            </div>
-                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">No activity logs recorded for Administrator</p>
-                        </div>
+                    <td colspan="4" class="px-8 py-20 text-center text-slate-400 text-xs font-black uppercase tracking-widest">
+                        Data log tidak ditemukan
                     </td>
                 </tr>
                 @endforelse
@@ -141,69 +121,35 @@
     @if(method_exists($audit_list, 'hasPages') && $audit_list->hasPages())
     <div class="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
         <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest italic">
-            Trace log <span class="text-[#008f5d] dark:text-emerald-400">{{ $audit_list->firstItem() }}</span> - <span class="text-[#008f5d] dark:text-emerald-400">{{ $audit_list->lastItem() }}</span> of {{ $audit_list->total() }} Events
+            Trace log {{ $audit_list->firstItem() }} - {{ $audit_list->lastItem() }} of {{ $audit_list->total() }} Events
         </div>
         <div class="pagination-container">
             {{ $audit_list->appends(request()->query())->links('pagination::tailwind') }}
         </div>
     </div>
     @endif
-
-    {{-- Footer Info --}}
-    <div class="text-center">
-        <p class="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.5em] italic">
-            SECURE ACCESS MONITORING &bull; APLIKASI SEDEKAH &bull; {{ date('Y') }}
-        </p>
-    </div>
 </div>
 
 <style>
-    /* Custom Scrollbar */
     .custom-scrollbar::-webkit-scrollbar { height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #008f5d22; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #008f5d; }
 
-    /* Gaya Pagination Kustom */
     .pagination-container nav > div:first-child { display: none; }
-    
     .pagination-container nav span[aria-current="page"] > span {
         background-color: #008f5d !important;
-        border-color: #008f5d !important;
         color: white !important;
         border-radius: 0.75rem;
-        box-shadow: 0 4px 12px rgba(0,143,93,0.2);
     }
-
-    .pagination-container nav a, 
-    .pagination-container nav span:not([aria-current="page"] > span) {
+    .pagination-container nav a {
         border-radius: 0.75rem;
         margin: 0 3px;
         padding: 8px 14px !important;
-        font-weight: 800;
         font-size: 10px;
-        text-transform: uppercase;
-        border: none !important;
+        font-weight: 800;
         background-color: #f8fafc;
-        color: #64748b;
         transition: all 0.3s ease;
-    }
-
-    .dark .pagination-container nav a,
-    .dark .pagination-container nav span:not([aria-current="page"] > span) {
-        background-color: #0f172a;
-        color: #94a3b8;
-    }
-
-    .pagination-container nav a:hover {
-        background-color: #ecfdf5;
-        color: #008f5d;
-        transform: translateY(-2px);
-    }
-
-    .dark .pagination-container nav a:hover {
-        background-color: #064e3b;
-        color: #34d399;
     }
 </style>
 @endsection

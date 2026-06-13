@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AuditLog extends Model
 {
-    protected $table = 'audit_log'; //
-    protected $primaryKey = 'id_log'; //
+    protected $table = 'audit_log'; 
+    protected $primaryKey = 'id_log'; 
 
     protected $fillable = [
         'id_user',
         'aksi_log',
+        'deskripsi',  // Ditambahkan agar bisa menyimpan detail aktivitas
+        'ip_address', // Ditambahkan untuk pelacakan jejak digital
         'waktu_log',
     ];
 

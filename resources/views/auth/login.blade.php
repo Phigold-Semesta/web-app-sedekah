@@ -1,4 +1,3 @@
-<!-- login.blade.php -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -60,12 +59,10 @@
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <!-- Dekorasi Background Blob -->
     <div class="blob" style="top: -10%; left: -10%;"></div>
     <div class="blob" style="bottom: -10%; right: -10%; animation-delay: -5s;"></div>
 
     <div class="w-full max-w-md">
-        <!-- Logo & Branding -->
         <div class="mb-10 text-center transform -rotate-1">
             <div class="inline-block p-4 mb-4 shadow-2xl glass-card rounded-3xl rotate-3 border-emerald-500/30">
                 <i class="fa-solid fa-hand-holding-heart text-5xl text-emerald-400"></i>
@@ -78,12 +75,10 @@
             </p>
         </div>
 
-        <!-- Login Card -->
         <div class="p-8 shadow-2xl glass-card rounded-[2.5rem]">
             <h2 class="mb-2 text-2xl font-black text-center text-white">Akses Internal</h2>
             <p class="mb-8 text-center text-emerald-200/50 text-xs font-bold uppercase tracking-widest">Silakan Masuk ke Akun Anda</p>
 
-            <!-- Menampilkan Error Login Manual -->
             @if($errors->any())
                 <div class="mb-6 p-4 rounded-2xl alert-glass flex items-center space-x-3 text-red-400">
                     <i class="fa-solid fa-circle-exclamation text-lg"></i>
@@ -93,8 +88,8 @@
 
             <form action="{{ route('login.proses') }}" method="POST" class="space-y-5">
                 @csrf
+                <input type="hidden" name="ip_address" value="{{ request()->ip() }}">
                 
-                <!-- Username Field -->
                 <div>
                     <label class="block mb-2 ml-5 text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Username</label>
                     <div class="relative">
@@ -107,7 +102,6 @@
                     </div>
                 </div>
 
-                <!-- Password Field -->
                 <div>
                     <label class="block mb-2 ml-5 text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Password</label>
                     <div class="relative">
@@ -120,15 +114,6 @@
                     </div>
                 </div>
 
-                <!-- Remember Me -->
-                <div class="flex items-center justify-between px-3">
-                    <label class="flex items-center text-xs font-bold text-emerald-100/70 cursor-pointer uppercase tracking-tighter">
-                        <input type="checkbox" name="remember" class="w-4 h-4 mr-2 border-none rounded-lg bg-white/20 text-emerald-600 focus:ring-emerald-500">
-                        Ingat Sesi Saya
-                    </label>
-                </div>
-
-                <!-- Submit Button -->
                 <button type="submit" 
                     class="w-full py-4 mt-4 text-xs font-black tracking-[0.3em] text-white uppercase transition-all duration-500 transform rounded-full shadow-2xl bg-emerald-900 hover:bg-emerald-600 hover:-translate-y-1 active:scale-95 border border-emerald-500/20">
                     Login
@@ -136,9 +121,8 @@
             </form>
         </div>
 
-        <!-- Footer Info -->
         <p class="mt-10 text-center text-emerald-500/40 text-[10px] font-black uppercase tracking-[0.3em]">
-            &copy; 2026 LPSE Karawang &bull; SOWAN V2 DNA
+            &copy; 2026 Yayasan Rumah Harapan &bull; SEDEKAH Application
         </p>
     </div>
 </body>

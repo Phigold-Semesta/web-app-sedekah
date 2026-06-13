@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use App\Models\AuditLog;
 
 class AuthController extends Controller
 {
@@ -30,10 +31,10 @@ class AuthController extends Controller
         ]);
 
         /**
-         * 2. FIXING: Menggunakan 'username' sesuai struktur DB di image_29ee01.png
+         * 2. FIXING: Menggunakan 'username' sesuai struktur DB
          */
         $credentials = [
-            'username' => $request->username, // Menyesuaikan dengan kolom di tabel 'user'
+            'username' => $request->username,
             'password' => $request->password,
         ];
 
@@ -41,10 +42,23 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // Ambil data user untuk pengecekan role
+            // Ambil data user
             $user = Auth::user();
             
-            // Redirect sesuai role: administrator atau direktur
+            // Sempurnakan: Deskripsi dinamis berdasarkan role user
+            $roleLabel = ucfirst($user->role); // Mengubah 'administrator' jadi 'Administrator', dst.
+            $deskripsiLog = "User dengan role {$roleLabel} ({$user->nama_user}) berhasil masuk ke sistem.";
+
+            // Pencatatan Audit Log
+            AuditLog::create([
+                'id_user'    => Auth::id(),
+                'aksi_log'   => 'LOGIN SISTEM',
+                'deskripsi'  => $deskripsiLog,
+                'ip_address' => $request->ip(),
+                'waktu_log'  => now(),
+            ]);
+
+            // Redirect sesuai role
             if ($user->role === 'administrator') {
                 return Redirect::intended('admin/dashboard');
             } elseif ($user->role === 'direktur') {

@@ -467,7 +467,7 @@ class AdminController extends Controller
     {
         // 1. Ambil input pencarian dan filter baris dari form Blade
         $search = $request->input('search');
-        $perPage = $request->input('per_page', 10); // Default 10 baris sesuai form filter Anda
+        $perPage = $request->input('per_page', 5); // Default 5 baris sesuai form filter Anda
 
         // 2. Query dasar: Mengambil data log audit terbaru beserta data user pelaksana aksi
         $query = AuditLog::with('user')->orderBy('waktu_log', 'desc');
