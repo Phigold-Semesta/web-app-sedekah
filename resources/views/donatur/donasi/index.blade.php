@@ -17,7 +17,8 @@
             </div>
             <h3 class="text-xl font-black text-slate-800 dark:text-white mb-2">Donasi Uang</h3>
             <p class="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">Bantu operasional dan kebutuhan mendesak melalui bantuan tunai secara transparan.</p>
-            <a href="{{ route('donatur.donasi.create') }}" class="block w-full text-center bg-emerald-700 text-white hover:bg-emerald-800 py-3 rounded-xl font-black uppercase text-xs transition-all active:scale-95">
+            <a href="{{ route('donatur.donasi.create', ['jenis' => 'uang']) }}" 
+               class="block w-full text-center bg-emerald-700 text-white hover:bg-emerald-800 py-3 rounded-xl font-black uppercase text-xs transition-all active:scale-95">
                 Donasi Sekarang
             </a>
         </div>
@@ -28,7 +29,8 @@
             </div>
             <h3 class="text-xl font-black text-slate-800 dark:text-white mb-2">Donasi Barang</h3>
             <p class="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">Salurkan bantuan berupa sembako, pakaian, atau kebutuhan pokok lainnya kepada yang membutuhkan.</p>
-            <a href="{{ route('donatur.donasi.create') }}" class="block w-full text-center bg-amber-600 text-white hover:bg-amber-700 py-3 rounded-xl font-black uppercase text-xs transition-all active:scale-95">
+            <a href="{{ route('donatur.donasi.create', ['jenis' => 'barang']) }}" 
+               class="block w-full text-center bg-amber-600 text-white hover:bg-amber-700 py-3 rounded-xl font-black uppercase text-xs transition-all active:scale-95">
                 Donasi Sekarang
             </a>
         </div>

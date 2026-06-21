@@ -186,10 +186,15 @@ Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(
     // Dashboard
     Route::get('/dashboard', [DonaturController::class, 'dashboard'])->name('dashboard');
 
-    // Fitur Donasi (Mengarah ke method di DonaturController)
+  // Fitur Donasi: Disesuaikan agar lebih eksplisit menangani tipe donasi
     Route::prefix('donasi')->name('donasi.')->group(function () {
         Route::get('/', [DonaturController::class, 'indexDonasi'])->name('index');
+        
+        // Rute ini sekarang secara dinamis memanggil view create_uang atau create_barang
+        // tergantung pada parameter ?jenis=xxx di URL
         Route::get('/create', [DonaturController::class, 'createDonasi'])->name('create');
+        
+        // Rute untuk menyimpan data (menangani uang & barang sekaligus di Controller)
         Route::post('/store', [DonaturController::class, 'storeDonasi'])->name('store');
     });
 

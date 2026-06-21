@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Kunjungan;
 use App\Models\Donasi;
-use App\Models\Donatur; // Menggunakan model Donatur
+use App\Models\Donatur;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,7 +23,6 @@ class DonaturController extends Controller
             'password' => 'required',
         ]);
 
-        // Menggunakan guard 'donatur'
         if (Auth::guard('donatur')->attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended('/donatur/dashboard');
@@ -36,26 +35,26 @@ class DonaturController extends Controller
         return view('auth.donatur.signup');
     }
 
-  public function signup(Request $request) {
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:donatur,email',
-        'password' => 'required|min:8|confirmed',
-        'no_hp' => 'required|string|max:20',
-        'alamat' => 'required|string|max:255', // Tambahkan validasi alamat
-    ]);
+    public function signup(Request $request) {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:donatur,email',
+            'password' => 'required|min:8|confirmed',
+            'no_hp' => 'required|string|max:20',
+            'alamat' => 'required|string|max:255',
+        ]);
 
-    $donatur = Donatur::create([
-        'nama_donatur' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'no_hp' => $request->no_hp,
-        'alamat' => $request->alamat, // Simpan alamat
-    ]);
+        $donatur = Donatur::create([
+            'nama_donatur' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'no_hp' => $request->no_hp,
+            'alamat' => $request->alamat,
+        ]);
 
-    Auth::guard('donatur')->login($donatur);
-    return redirect('/donatur/dashboard');
-}
+        Auth::guard('donatur')->login($donatur);
+        return redirect('/donatur/dashboard');
+    }
 
     // --- AREA DASHBOARD & MEMBER (ONLINE) ---
 
@@ -73,23 +72,37 @@ class DonaturController extends Controller
         return view('donatur.donasi.index');
     }
 
-    public function createDonasi() {
-        return view('donatur.donasi.create');
+    // Perbaikan: Menentukan view berdasarkan parameter jenis
+    public function createDonasi(Request $request) {
+        $jenis = $request->query('jenis');
+
+        if ($jenis === 'barang') {
+            return view('donatur.donasi.create_barang');
+        }
+
+        // Default ke uang
+        return view('donatur.donasi.create_uang');
     }
 
+    // Perbaikan: Menyimpan data donasi yang fleksibel untuk uang/barang
     public function storeDonasi(Request $request) {
         $request->validate([
-            'jenis_donasi' => 'required',
-            'jumlah' => 'required|numeric',
+            'jenis_donasi' => 'required|in:uang,barang',
+            'jumlah' => 'required_if:jenis_donasi,uang|nullable|numeric',
+            'nama_barang' => 'required_if:jenis_donasi,barang|nullable|string',
+            'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
+            'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
         ]);
 
         Donasi::create([
-            // Menggunakan id_donatur dari guard yang sedang login
-            'id_donatur' => Auth::guard('donatur')->id(), 
+            'id_donatur'   => Auth::guard('donatur')->id(),
             'jenis_donasi' => $request->jenis_donasi,
-            'jumlah' => $request->jumlah,
-            'status' => 'pending',
-            'tgl_donasi' => now(),
+            'jumlah'       => $request->jumlah,
+            'nama_barang'  => $request->nama_barang,
+            'jumlah_barang'=> $request->jumlah_barang,
+            'satuan'       => $request->satuan,
+            'status'       => 'pending',
+            'tgl_donasi'   => now(),
         ]);
 
         return redirect()->route('donatur.donasi.index')->with('success', 'Donasi berhasil diajukan!');
