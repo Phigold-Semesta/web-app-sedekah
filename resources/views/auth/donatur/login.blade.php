@@ -5,114 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Donatur | SEDEKAH - Yayasan Rumah Harapan</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #067259;
-            overflow: hidden;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .blob {
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: linear-gradient(180deg, rgba(16, 185, 129, 0.4) 0%, rgba(5, 150, 105, 0.4) 100%);
-            filter: blur(80px);
-            border-radius: 50%;
-            z-index: -1;
-            animation: move 25s infinite alternate;
-        }
+        /* Dekorasi Background Konsisten */
+        .dots-left { position: absolute; top: 20px; left: 20px; width: 180px; height: 120px; background-image: radial-gradient(#6ee7b7 1.5px, transparent 1.5px); background-size: 20px 20px; opacity: .6; }
+        .dots-right { position: absolute; top: 180px; right: 40px; width: 180px; height: 180px; background-image: radial-gradient(#6ee7b7 1.5px, transparent 1.5px); background-size: 20px 20px; opacity: .6; }
+        .wave { position: absolute; left: 0; bottom: 0; width: 100%; height: 260px; overflow: hidden; z-index: 0; }
+        .wave::before { content: ""; position: absolute; width: 140%; height: 220px; left: -20%; bottom: 60px; background: rgba(16, 185, 129, .1); border-radius: 50%; }
+        .wave::after { content: ""; position: absolute; width: 140%; height: 180px; left: -20%; bottom: -20px; background: rgba(5, 150, 105, .2); border-radius: 50%; }
 
-        @keyframes move {
-            from { transform: translate(-10%, -10%); }
-            to { transform: translate(20%, 20%); }
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .input-pill {
-            background: rgba(255, 255, 255, 1);
-            border-radius: 9999px; 
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .input-pill:focus {
-            box-shadow: 0 0 0 4px rgba(8, 189, 128, 0.2);
-            border-color: #10b981;
-            outline: none;
-        }
-
-        .alert-glass {
-            background: rgba(220, 38, 38, 0.1);
-            border: 1px solid rgba(220, 38, 38, 0.2);
-            backdrop-filter: blur(10px);
-        }
+        .login-card { background: #fff; border-radius: 22px; box-shadow: 0 10px 30px rgba(6, 78, 59,.08), 0 20px 60px rgba(6, 78, 59,.12); }
+        .input-pill { height: 50px; border: 1px solid #cbd5e1; border-radius: 12px; transition: .25s; }
+        .input-pill:focus { outline: none; border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,.15); }
+        .login-btn { background: linear-gradient(90deg, #059669, #065f46); transition: .3s; }
+        .login-btn:hover { background: linear-gradient(90deg, #065f46, #064e3b); }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-    <div class="blob" style="top: -10%; left: -10%;"></div>
-    <div class="blob" style="bottom: -10%; right: -10%; animation-delay: -5s;"></div>
 
-    <div class="w-full max-w-md">
-        <div class="mb-10 text-center transform -rotate-1">
-            <div class="inline-block p-6 mb-4 shadow-2xl glass-card rounded-3xl rotate-3 border-emerald-500/30">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="dots-left"></div>
+    <div class="dots-right"></div>
+    <div class="wave"></div>
+
+    <div class="w-full max-w-md relative z-10">
+        <div class="mb-8 text-center">
+            <div class="inline-block p-6 mb-4 bg-white shadow-xl rounded-3xl border border-emerald-100">
+                <i class="fa-solid fa-hand-holding-heart text-5xl text-emerald-600"></i>
             </div>
-            <h1 class="text-4xl font-extrabold tracking-tighter text-white">SEDEKAH</h1>
-            <p class="mt-2 text-[10px] font-black text-emerald-300 uppercase tracking-[0.4em]">Yayasan Rumah Harapan</p>
+            <h1 class="text-4xl font-extrabold tracking-tighter text-slate-800">SEDEKAH</h1>
+            <p class="mt-2 text-xs font-bold text-emerald-600 uppercase tracking-[0.3em]">Yayasan Rumah Harapan</p>
         </div>
 
-        <div class="p-8 shadow-2xl glass-card rounded-[2.5rem]">
-            <h2 class="mb-2 text-2xl font-black text-center text-white">Login Donatur</h2>
-            <p class="mb-8 text-center text-emerald-200/50 text-xs font-bold uppercase tracking-widest">Selamat Datang Kembali</p>
+        <div class="p-8 login-card border border-emerald-50">
+            <h2 class="mb-1 text-2xl font-black text-center text-slate-800">Login Donatur</h2>
+            <p class="mb-8 text-center text-gray-500 text-xs font-semibold uppercase tracking-widest">Selamat Datang Kembali</p>
 
             @if($errors->any())
-                <div class="mb-6 p-4 rounded-2xl alert-glass flex items-center space-x-3 text-red-400">
-                    <span class="text-xs font-bold uppercase tracking-tight">{{ $errors->first() }}</span>
+                <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center space-x-3 text-red-600">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span class="text-xs font-bold uppercase">{{ $errors->first() }}</span>
                 </div>
             @endif
 
             <form action="{{ route('donatur.login.proses') }}" method="POST" class="space-y-5">
                 @csrf
+                
                 <div>
-                    <label class="block mb-2 ml-5 text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Email Address</label>
-                    <input type="email" name="email" value="{{ old('email') }}" required
-                        class="w-full py-4 px-6 text-sm font-bold text-emerald-900 input-pill placeholder:text-emerald-900/30" 
-                        placeholder="Ketik email donatur...">
+                    <label class="block mb-2 ml-1 text-xs font-bold text-gray-700 uppercase tracking-wider">Email Address</label>
+                    <div class="relative">
+                        <input type="email" name="email" value="{{ old('email') }}" required
+                            class="input-pill w-full px-4 pl-12 text-sm font-bold text-emerald-900" 
+                            placeholder="Ketik email donatur...">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-emerald-500">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                    </div>
                 </div>
 
                 <div>
-                    <label class="block mb-2 ml-5 text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Password</label>
-                    <input type="password" name="password" required
-                        class="w-full py-4 px-6 text-sm font-bold text-emerald-900 input-pill placeholder:text-emerald-900/30" 
-                        placeholder="••••••••">
+                    <label class="block mb-2 ml-1 text-xs font-bold text-gray-700 uppercase tracking-wider">Password</label>
+                    <div class="relative">
+                        <input type="password" name="password" required
+                            class="input-pill w-full px-4 pl-12 text-sm font-bold text-emerald-900" 
+                            placeholder="••••••••">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-emerald-500">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                    </div>
                 </div>
 
                 <button type="submit" 
-                    class="w-full py-4 mt-6 text-xs font-black tracking-[0.3em] text-white uppercase transition-all duration-500 transform rounded-full shadow-2xl bg-emerald-900 hover:bg-emerald-600 hover:-translate-y-1 active:scale-95 border border-emerald-500/20">
+                    class="login-btn w-full py-4 mt-2 text-sm font-black tracking-[0.2em] text-white uppercase rounded-xl shadow-lg hover:shadow-emerald-200 active:scale-95 transition-all">
                     Masuk Sekarang
                 </button>
             </form>
 
             <div class="mt-8 text-center">
-                <p class="text-[10px] text-emerald-100/70 font-bold uppercase tracking-widest">
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">
                     Belum punya akun? 
-                    <a href="{{ route('donatur.signup') }}" class="text-white font-black underline hover:text-emerald-300">Daftar Sekarang</a>
+                    <a href="{{ route('donatur.signup') }}" class="text-emerald-600 font-black underline hover:text-emerald-800">Daftar Sekarang</a>
                 </p>
             </div>
         </div>
 
-        <p class="mt-10 text-center text-emerald-500/40 text-[10px] font-black uppercase tracking-[0.3em]">
+        <p class="mt-8 text-center text-gray-400 text-[10px] font-bold uppercase tracking-[0.3em]">
             &copy; 2026 LPSE Karawang &bull; SOWAN V2 DNA
         </p>
     </div>
