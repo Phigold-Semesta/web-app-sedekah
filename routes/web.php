@@ -23,6 +23,10 @@ Route::get('/', function () {
 Route::get('/kunjungan/form', [DonaturController::class, 'createKunjungan'])->name('donatur.kunjungan.create');
 Route::post('/kunjungan/simpan', [DonaturController::class, 'storeKunjungan'])->name('donatur.kunjungan.store');
 
+// --- TAMBAHAN MIDTRANS: CALLBACK (PENTING) ---
+// Diletakkan di sini agar Midtrans bisa mengakses rute ini tanpa harus login
+Route::post('/midtrans/callback', [DonaturController::class, 'notificationHandler'])->name('midtrans.callback');
+
 // --- SISTEM AUTENTIKASI ---
 
 // Autentikasi Internal (Admin & Direktur)
@@ -186,16 +190,15 @@ Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(
     // Dashboard
     Route::get('/dashboard', [DonaturController::class, 'dashboard'])->name('dashboard');
 
-  // Fitur Donasi: Disesuaikan agar lebih eksplisit menangani tipe donasi
+    // Fitur Donasi
     Route::prefix('donasi')->name('donasi.')->group(function () {
         Route::get('/', [DonaturController::class, 'indexDonasi'])->name('index');
-        
-        // Rute ini sekarang secara dinamis memanggil view create_uang atau create_barang
-        // tergantung pada parameter ?jenis=xxx di URL
         Route::get('/create', [DonaturController::class, 'createDonasi'])->name('create');
-        
-        // Rute untuk menyimpan data (menangani uang & barang sekaligus di Controller)
         Route::post('/store', [DonaturController::class, 'storeDonasi'])->name('store');
+        
+        // Rute untuk menampilkan halaman pembayaran
+        // Menggunakan id dari DonasiUang untuk akses langsung
+        Route::get('/bayar/{id}', [DonaturController::class, 'pembayaran'])->name('bayar');
     });
 
     // Fitur Kunjungan
@@ -207,3 +210,4 @@ Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(
     // Fitur Riwayat
     Route::get('/riwayat', [DonaturController::class, 'riwayat'])->name('riwayat.index');
 });
+

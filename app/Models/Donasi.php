@@ -8,12 +8,19 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Donasi extends Model
 {
-    protected $table = 'donasi'; //
-    protected $primaryKey = 'id_donasi'; //
+    protected $table = 'donasi';
+    protected $primaryKey = 'id_donasi';
 
+    // Disempurnakan: Menambahkan semua kolom yang digunakan di Controller
     protected $fillable = [
+        'id_donatur',      // Penting untuk melacak donatur
         'id_kunjungan',
         'id_user',
+        'jenis_donasi',
+        'jumlah',
+        'nama_barang',
+        'jumlah_barang',
+        'satuan',
         'tgl_donasi',
         'status_donasi',
         'bukti_donasi',
@@ -27,6 +34,12 @@ class Donasi extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');
+    }
+
+    // Tambahan: Relasi ke tabel Donatur (jika diperlukan)
+    public function donatur(): BelongsTo
+    {
+        return $this->belongsTo(Donatur::class, 'id_donatur', 'id_donatur');
     }
 
     public function donasi_uang(): HasOne

@@ -20,6 +20,7 @@
         <p class="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium px-2">Bantu operasional dan kebutuhan mendesak secara transparan.</p>
     </div>
 
+    {{-- Form action sudah benar, pastikan di web.php route ini didefinisikan sebagai Route::post --}}
     <form action="{{ route('donatur.donasi.store') }}" method="POST" 
           class="bg-white dark:bg-slate-900 p-6 md:p-10 lg:p-12 rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
         @csrf
@@ -30,8 +31,10 @@
             <div class="relative group">
                 <span class="absolute left-5 top-5 text-emerald-600 font-black text-xl md:text-2xl">Rp</span>
                 <input type="number" name="jumlah" 
+                       min="5000" 
                        class="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl md:rounded-3xl pl-16 py-4 md:py-5 focus:border-emerald-500 outline-none text-xl md:text-2xl text-slate-800 dark:text-white font-black transition-all" 
-                       placeholder="100.000" required>
+                       placeholder="100.000" 
+                       required>
             </div>
         </div>
 
