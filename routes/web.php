@@ -197,8 +197,10 @@ Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(
         Route::post('/store', [DonaturController::class, 'storeDonasi'])->name('store');
         
         // Rute untuk menampilkan halaman pembayaran
-        // Menggunakan id dari DonasiUang untuk akses langsung
         Route::get('/bayar/{id}', [DonaturController::class, 'pembayaran'])->name('bayar');
+        
+        // RUTE BARU: Menampilkan halaman sukses setelah pembayaran
+        Route::get('/sukses/{id}', [DonaturController::class, 'sukses'])->name('sukses');
     });
 
     // Fitur Kunjungan
@@ -209,5 +211,11 @@ Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(
 
     // Fitur Riwayat
     Route::get('/riwayat', [DonaturController::class, 'riwayat'])->name('riwayat.index');
+});
+
+// --- RUTE PUBLIK (TIDAK PERLU LOGIN) ---
+// Digunakan oleh Midtrans untuk mengirim notifikasi sukses/pending/gagal
+Route::prefix('donatur/donasi')->group(function () {
+    Route::post('/notification-handler', [DonaturController::class, 'notificationHandler']);
 });
 

@@ -99,8 +99,6 @@ class DonaturController extends Controller
             'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
         ]);
 
-        // Menggunakan ID 999 (Sistem) agar tidak melanggar Foreign Key 'id_user' di tabel 'donasi'
-        // dan menjaga integritas relasi yang diatur oleh Admin/Direktur.
         $donasi = Donasi::create([
             'id_user'       => 999, 
             'id_kunjungan'  => null, 
@@ -145,6 +143,11 @@ class DonaturController extends Controller
         return view('donatur.donasi.bayar', compact('snapToken', 'donasiUang'));
     }
 
+    public function sukses($id) {
+        $donasiUang = DonasiUang::findOrFail($id);
+        return view('donatur.donasi.sukses_bayar', compact('donasiUang'));
+    }
+
     public function notificationHandler(Request $request) {
         $notif = new \Midtrans\Notification();
         $transaction = $notif->transaction_status;
@@ -153,12 +156,14 @@ class DonaturController extends Controller
         $donasiUang = DonasiUang::where('order_id', $orderId)->first();
 
         if ($donasiUang) {
-            if ($transaction == 'settlement') {
-                $donasiUang->update(['status' => 'lunas']);
+            if ($transaction == 'settlement' || $transaction == 'capture') {
+                $donasiUang->update(['status' => 'donasi berhasil terkirim']);
                 Donasi::where('id_donasi', $donasiUang->id_donasi)
-                    ->update(['status_donasi' => 'lunas']);
+                    ->update(['status_donasi' => 'donasi berhasil terkirim']);
             } elseif (in_array($transaction, ['cancel', 'expire', 'deny'])) {
                 $donasiUang->update(['status' => 'gagal']);
+                Donasi::where('id_donasi', $donasiUang->id_donasi)
+                    ->update(['status_donasi' => 'gagal']);
             }
         }
 

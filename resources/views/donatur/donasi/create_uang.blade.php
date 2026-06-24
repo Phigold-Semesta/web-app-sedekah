@@ -20,7 +20,6 @@
         <p class="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium px-2">Bantu operasional dan kebutuhan mendesak secara transparan.</p>
     </div>
 
-    {{-- Form action sudah benar, pastikan di web.php route ini didefinisikan sebagai Route::post --}}
     <form action="{{ route('donatur.donasi.store') }}" method="POST" 
           class="bg-white dark:bg-slate-900 p-6 md:p-10 lg:p-12 rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
         @csrf
@@ -42,16 +41,6 @@
             <button type="button" onclick="document.querySelector('input[name=jumlah]').value='50000'" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-black uppercase text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all">50rb</button>
             <button type="button" onclick="document.querySelector('input[name=jumlah]').value='100000'" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-black uppercase text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all">100rb</button>
             <button type="button" onclick="document.querySelector('input[name=jumlah]').value='250000'" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-black uppercase text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all">250rb</button>
-        </div>
-
-        <div class="mb-10">
-            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-4 ml-2">Tersedia Melalui</label>
-            <div class="grid grid-cols-4 gap-4 text-center">
-                <div class="text-slate-400"><i class="fab fa-cc-visa text-2xl mb-1"></i><p class="text-[8px] uppercase">Card</p></div>
-                <div class="text-slate-400"><i class="fas fa-university text-2xl mb-1"></i><p class="text-[8px] uppercase">Bank</p></div>
-                <div class="text-slate-400"><i class="fas fa-qrcode text-2xl mb-1"></i><p class="text-[8px] uppercase">QRIS</p></div>
-                <div class="text-slate-400"><i class="fas fa-wallet text-2xl mb-1"></i><p class="text-[8px] uppercase">E-Wallet</p></div>
-            </div>
         </div>
 
         <button type="submit" 

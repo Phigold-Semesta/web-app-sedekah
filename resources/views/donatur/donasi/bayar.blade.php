@@ -30,7 +30,14 @@
     payButton.addEventListener('click', function () {
         window.snap.pay('{{ $snapToken }}', {
             onSuccess: function(result){
-                window.location.href = "{{ route('donatur.riwayat.index') }}";
+                // Indikator loading untuk kesan aplikasi profesional
+                payButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Memproses Verifikasi...';
+                payButton.classList.add('opacity-75', 'cursor-wait');
+                
+                // Jeda 1 detik untuk memastikan webhook terproses di sisi server
+                setTimeout(function() {
+                    window.location.href = "{{ route('donatur.donasi.sukses', $donasiUang->id_donasi_uang) }}";
+                }, 1000);
             },
             onPending: function(result){
                 alert("Menunggu pembayaran Anda!");
