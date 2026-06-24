@@ -11,6 +11,8 @@ use App\Services\MidtransService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Midtrans\Notification;
+use Midtrans\Config;
 
 class DonaturController extends Controller
 {
@@ -100,7 +102,7 @@ class DonaturController extends Controller
         ]);
 
         $donasi = Donasi::create([
-            'id_user'       => 999, 
+            'id_user'      => 999, 
             'id_kunjungan'  => null, 
             'status_donasi' => 'belum bayar',
             'tgl_donasi'    => now(),
@@ -113,6 +115,7 @@ class DonaturController extends Controller
                 'id_donasi' => $donasi->id_donasi,
                 'nominal'   => $request->jumlah,
                 'order_id'  => $orderId,
+                'status'    => 'belum bayar',
             ]);
 
             $params = [
@@ -135,7 +138,7 @@ class DonaturController extends Controller
         return redirect()->route('donatur.donasi.index')->with('success', 'Donasi barang berhasil diajukan!');
     }
 
-    // --- TAMBAHAN: FUNGSI PEMBAYARAN & CALLBACK MIDTRANS ---
+    // --- AREA PEMBAYARAN & CALLBACK MIDTRANS ---
 
     public function pembayaran($id) {
         $donasiUang = DonasiUang::findOrFail($id);
@@ -149,25 +152,50 @@ class DonaturController extends Controller
     }
 
     public function notificationHandler(Request $request) {
-        $notif = new \Midtrans\Notification();
-        $transaction = $notif->transaction_status;
-        $orderId = $notif->order_id;
+        try {
+            Config::$serverKey = config('services.midtrans.server_key');
+            Config::$isProduction = config('services.midtrans.is_production', false);
+            Config::$isSanitized = true;
+            Config::$is3ds = true;
+            
+            $notif = new Notification();
+            
+            $transaction = $notif->transaction_status;
+            $orderId = $notif->order_id;
 
-        $donasiUang = DonasiUang::where('order_id', $orderId)->first();
+            Log::info("Midtrans Notification received - OrderID: $orderId, Status: $transaction");
 
-        if ($donasiUang) {
-            if ($transaction == 'settlement' || $transaction == 'capture') {
-                $donasiUang->update(['status' => 'donasi berhasil terkirim']);
-                Donasi::where('id_donasi', $donasiUang->id_donasi)
-                    ->update(['status_donasi' => 'donasi berhasil terkirim']);
-            } elseif (in_array($transaction, ['cancel', 'expire', 'deny'])) {
-                $donasiUang->update(['status' => 'gagal']);
-                Donasi::where('id_donasi', $donasiUang->id_donasi)
-                    ->update(['status_donasi' => 'gagal']);
+            $donasiUang = DonasiUang::where('order_id', $orderId)->first();
+
+            if (!$donasiUang) {
+                return response()->json(['message' => 'Order not found'], 404);
             }
-        }
 
-        return response()->json(['message' => 'Notification processed'], 200);
+            // Mapping status
+            if (in_array($transaction, ['capture', 'settlement'])) {
+                $statusTujuan = 'donasi berhasil terkirim';
+            } elseif (in_array($transaction, ['cancel', 'deny', 'expire'])) {
+                $statusTujuan = 'donasi gagal';
+            } else {
+                $statusTujuan = 'pending';
+            }
+            
+            // Update status jika ada perubahan
+            if ($donasiUang->status !== $statusTujuan) {
+                $donasiUang->update(['status' => $statusTujuan]);
+                
+                Donasi::where('id_donasi', $donasiUang->id_donasi)
+                      ->update(['status_donasi' => $statusTujuan]);
+                
+                Log::info("Status updated for OrderID: $orderId to $statusTujuan");
+            }
+
+            return response()->json(['message' => 'Success'], 200);
+
+        } catch (\Exception $e) {
+            Log::error("Midtrans Notification Error: " . $e->getMessage());
+            return response()->json(['message' => 'Server Error'], 500);
+        }
     }
 
     public function createKunjungan() {

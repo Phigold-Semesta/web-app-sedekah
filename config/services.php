@@ -38,11 +38,13 @@ return [
     |--------------------------------------------------------------------------
     | Midtrans Payment Gateway
     |--------------------------------------------------------------------------
+    | Konfigurasi ini menghubungkan aplikasi ke Midtrans Dashboard.
+    | Pastikan MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di .env sudah benar.
     */
     'midtrans' => [
         'server_key'    => env('MIDTRANS_SERVER_KEY'),
         'client_key'    => env('MIDTRANS_CLIENT_KEY'),
-        'is_production' => env('MIDTRANS_IS_PRODUCTION', false), // False = Sandbox
+        'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
     ],
 
 ];

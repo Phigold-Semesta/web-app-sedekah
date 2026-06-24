@@ -23,10 +23,6 @@ Route::get('/', function () {
 Route::get('/kunjungan/form', [DonaturController::class, 'createKunjungan'])->name('donatur.kunjungan.create');
 Route::post('/kunjungan/simpan', [DonaturController::class, 'storeKunjungan'])->name('donatur.kunjungan.store');
 
-// --- TAMBAHAN MIDTRANS: CALLBACK (PENTING) ---
-// Diletakkan di sini agar Midtrans bisa mengakses rute ini tanpa harus login
-Route::post('/midtrans/callback', [DonaturController::class, 'notificationHandler'])->name('midtrans.callback');
-
 // --- SISTEM AUTENTIKASI ---
 
 // Autentikasi Internal (Admin & Direktur)
@@ -76,13 +72,14 @@ Route::middleware(['auth'])->group(function () {
     // --- GRUP RUTE ADMINISTRATOR ---
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-      // --- MENU VERIFIKASI DONASI ---
+        
+        // --- MENU VERIFIKASI DONASI ---
         Route::prefix('verifikasi')->name('verifikasi.')->group(function () {
             Route::get('/', [AdminController::class, 'verifikasi_index'])->name('index');
             Route::post('/update/{id_donasi}', [AdminController::class, 'verifikasi_update'])->name('update');
         });
         
-        // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE MASTER KATEGORI BARANG ---
+        // --- GRUP RUTE MASTER KATEGORI BARANG ---
         Route::prefix('kategori-barang')->name('kategori_barang.')->group(function () {
             Route::get('/', [AdminController::class, 'kategori'])->name('index');
             Route::get('/create', [AdminController::class, 'kategoriCreate'])->name('create');
@@ -92,18 +89,15 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/destroy/{id_kategori_barang}', [AdminController::class, 'kategoriDestroy'])->name('destroy');
         });
         
-        // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE KELOLA RIWAYAT DONASI KESELURUHAN ---
+        // --- GRUP RUTE KELOLA RIWAYAT DONASI KESELURUHAN ---
         Route::prefix('riwayat-donasi')->name('riwayat_donasi.')->group(function () {
             Route::get('/', [AdminController::class, 'riwayat'])->name('index');
-            
-            // PERBAIKAN DISKRESI: Menambahkan rute ekspor dan diletakkan sebelum parameter dinamis {id_donasi} agar tidak bentrok
             Route::get('/export', [AdminController::class, 'export'])->name('export');
-            
             Route::get('/show/{id_donasi}', [AdminController::class, 'riwayat_show'])->name('show');
             Route::put('/update-status/{id_donasi}', [AdminController::class, 'riwayat_update_status'])->name('update_status');
         });
         
-        // --- REVISI & PENYEMPURNAAN UTAMA: GRUP RUTE KELOLA DATA DONATUR ---
+        // --- GRUP RUTE KELOLA DATA DONATUR ---
         Route::prefix('donatur')->name('donatur.')->group(function () {
             Route::get('/', [AdminController::class, 'donatur'])->name('index');
             Route::get('/create', [AdminController::class, 'donatur_create'])->name('create');
@@ -114,24 +108,15 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/destroy/{id_donatur}', [AdminController::class, 'donatur_destroy'])->name('destroy');
         });
         
-        // PERBAIKAN: Menyelaraskan name route menjadi 'audit_log.index' agar klop dengan pemanggilan view dan layout sidebar admin
         Route::get('/audit-log', [AdminController::class, 'audit'])->name('audit_log.index');
-
-        // --- TAMBAHAN BARU: MODUL MONITORING RATING KUNJUNGAN ---
         Route::get('/rating-kunjungan', [AdminController::class, 'rating_kunjungan'])->name('rating_kunjungan.index');
-        
-        // PERBAIKAN & PENYEMPURNAAN: Menambahkan rute POST untuk memproses form simpan tanggapan/respon ulasan admin agar klop dengan form modal Blade
         Route::post('/rating-kunjungan/{id_rating}/tanggapan', [AdminController::class, 'simpan_tanggapan'])->name('rating_kunjungan.tanggapan');
 
-        // --- TAMBAHAN BARU & PENYEMPURNAAN LENGKAP: RUTE MANAJEMEN USER (AKTOR ADMINISTRATOR) ---
+        // --- RUTE MANAJEMEN USER (AKTOR ADMINISTRATOR) ---
         Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
             Route::get('/', [AdminController::class, 'user_index'])->name('index');
             Route::get('/create', [AdminController::class, 'user_create'])->name('create');
-            
-            // PERBAIKAN UTAMA: Mengubah URL '/store' menjadi '/' untuk mengamankan fallback GET 405 saat validasi gagal
             Route::post('/', [AdminController::class, 'user_store'])->name('store');
-            
-            // DISESUAIKAN: Parameter diselaraskan dari {id} menjadi {id_user} agar klop dengan Controller
             Route::get('/show/{id_user}', [AdminController::class, 'user_show'])->name('show');
             Route::get('/edit/{id_user}', [AdminController::class, 'user_edit'])->name('edit');
             Route::put('/update/{id_user}', [AdminController::class, 'user_update'])->name('update');
@@ -143,39 +128,29 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('direktur')->name('direktur.')->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'index'])->name('dashboard');
         
-        // --- PENYEMPURNAAN RUTE MONITORING DONATUR ---
         Route::prefix('monitoring-donatur')->name('riwayat_donatur.')->group(function () {
             Route::get('/', [DirekturController::class, 'riwayat_donatur'])->name('index');
             Route::get('/show/{id_user}', [DirekturController::class, 'donatur_show'])->name('show');
         });
         
-        // --- PENYEMPURNAAN RUTE KEUANGAN (MODEL: DonasiUang) ---
         Route::prefix('monitoring-keuangan')->name('keuangan.')->group(function () {
             Route::get('/', [DirekturController::class, 'keuangan'])->name('index'); 
             Route::get('/export', [DirekturController::class, 'export_donasi_uang'])->name('export');
         });
 
-        // --- PENYEMPURNAAN RUTE LOGISTIK (MODEL: DonasiBarang) ---
         Route::prefix('monitoring-logistik')->name('logistik.')->group(function () {
             Route::get('/', [DirekturController::class, 'logistik'])->name('index'); 
             Route::get('/export', [DirekturController::class, 'export_donasi_barang'])->name('export');
         });
 
-        // Rute Audit System (AuditLog)
         Route::get('/audit-system', [DirekturController::class, 'audit'])->name('audit');
-        
-        // Rute Laporan Umum
         Route::get('/laporan-umum', [DirekturController::class, 'laporan'])->name('laporan');
 
         // --- MANAJEMEN USER (EKSLUSIF DIREKTUR) ---
         Route::prefix('manajemen-user')->name('manajemen_user.')->group(function () {
             Route::get('/', [DirekturController::class, 'user_index'])->name('index');
             Route::get('/create', [DirekturController::class, 'user_create'])->name('create');
-            
-            // PERBAIKAN UTAMA: Mengubah URL '/store' menjadi '/' untuk mengamankan fallback GET 405 saat validasi gagal
             Route::post('/', [DirekturController::class, 'user_store'])->name('store');
-            
-            // DISESUAIKAN: Parameter diselaraskan dari {id} menjadi {id_user} agar klop dengan Controller Eksklusif Direktur
             Route::get('/show/{id_user}', [DirekturController::class, 'user_show'])->name('show');
             Route::get('/edit/{id_user}', [DirekturController::class, 'user_edit'])->name('edit');
             Route::put('/update/{id_user}', [DirekturController::class, 'user_update'])->name('update');
@@ -187,35 +162,20 @@ Route::middleware(['auth'])->group(function () {
 // --- GRUP RUTE DONATUR (TERPROTEKSI) ---
 Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(function () {
     
-    // Dashboard
     Route::get('/dashboard', [DonaturController::class, 'dashboard'])->name('dashboard');
 
-    // Fitur Donasi
     Route::prefix('donasi')->name('donasi.')->group(function () {
         Route::get('/', [DonaturController::class, 'indexDonasi'])->name('index');
         Route::get('/create', [DonaturController::class, 'createDonasi'])->name('create');
         Route::post('/store', [DonaturController::class, 'storeDonasi'])->name('store');
-        
-        // Rute untuk menampilkan halaman pembayaran
         Route::get('/bayar/{id}', [DonaturController::class, 'pembayaran'])->name('bayar');
-        
-        // RUTE BARU: Menampilkan halaman sukses setelah pembayaran
         Route::get('/sukses/{id}', [DonaturController::class, 'sukses'])->name('sukses');
     });
 
-    // Fitur Kunjungan
     Route::prefix('kunjungan')->name('kunjungan.')->group(function () {
         Route::get('/create', [DonaturController::class, 'createKunjungan'])->name('create');
         Route::post('/store', [DonaturController::class, 'storeKunjungan'])->name('store');
     });
 
-    // Fitur Riwayat
     Route::get('/riwayat', [DonaturController::class, 'riwayat'])->name('riwayat.index');
 });
-
-// --- RUTE PUBLIK (TIDAK PERLU LOGIN) ---
-// Digunakan oleh Midtrans untuk mengirim notifikasi sukses/pending/gagal
-Route::prefix('donatur/donasi')->group(function () {
-    Route::post('/notification-handler', [DonaturController::class, 'notificationHandler']);
-});
-
