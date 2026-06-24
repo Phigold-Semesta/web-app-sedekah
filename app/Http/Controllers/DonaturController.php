@@ -99,11 +99,10 @@ class DonaturController extends Controller
             'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
         ]);
 
-        $donaturId = Auth::guard('donatur')->id();
-        
-        // PERBAIKAN: id_kunjungan dibuat NULL agar tidak melanggar Foreign Key Constraint
+        // Menggunakan ID 999 (Sistem) agar tidak melanggar Foreign Key 'id_user' di tabel 'donasi'
+        // dan menjaga integritas relasi yang diatur oleh Admin/Direktur.
         $donasi = Donasi::create([
-            'id_user'       => $donaturId,
+            'id_user'       => 999, 
             'id_kunjungan'  => null, 
             'status_donasi' => 'belum bayar',
             'tgl_donasi'    => now(),
