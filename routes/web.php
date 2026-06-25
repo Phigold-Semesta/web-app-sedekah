@@ -169,6 +169,7 @@ Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(
         Route::get('/create', [DonaturController::class, 'createDonasi'])->name('create');
         Route::post('/store', [DonaturController::class, 'storeDonasi'])->name('store');
         Route::get('/bayar/{id}', [DonaturController::class, 'pembayaran'])->name('bayar');
+        // Rute ini tetap konsisten, pastikan ID di Controller menggunakan id_donasi_uang
         Route::get('/sukses/{id}', [DonaturController::class, 'sukses'])->name('sukses');
     });
 

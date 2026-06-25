@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Notification;
 use Midtrans\Config;
+use Illuminate\Support\Facades\DB; // <--- Tambahkan di bagian atas controller
 
 class DonaturController extends Controller
 {
@@ -93,14 +94,16 @@ class DonaturController extends Controller
     }
 
     public function storeDonasi(Request $request) {
-        $request->validate([
-            'jenis_donasi' => 'required|in:uang,barang',
-            'jumlah' => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
-            'nama_barang' => 'required_if:jenis_donasi,barang|nullable|string',
-            'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
-            'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
-        ]);
+    $request->validate([
+        'jenis_donasi' => 'required|in:uang,barang',
+        'jumlah' => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
+        'nama_barang' => 'required_if:jenis_donasi,barang|nullable|string',
+        'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
+        'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
+    ]);
 
+    // --- MULAI TRANSAKSI ---
+    return DB::transaction(function () use ($request) {
         $donasi = Donasi::create([
             'id_user'      => 999, 
             'id_kunjungan'  => null, 
@@ -123,6 +126,9 @@ class DonaturController extends Controller
                     'order_id' => $orderId,
                     'gross_amount' => (int)$request->jumlah,
                 ],
+                'callbacks' => [ // INI PENTING (Berdasarkan pembahasan kita tadi)
+                    'finish' => route('donatur.donasi.sukses', $donasiUang->id_donasi_uang)
+                ],
                 'customer_details' => [
                     'first_name' => Auth::guard('donatur')->user()->nama_donatur,
                     'email' => Auth::guard('donatur')->user()->email,
@@ -136,18 +142,19 @@ class DonaturController extends Controller
         }
 
         return redirect()->route('donatur.donasi.index')->with('success', 'Donasi barang berhasil diajukan!');
-    }
+    });
+}
 
     // --- AREA PEMBAYARAN & CALLBACK MIDTRANS ---
 
     public function pembayaran($id) {
-        $donasiUang = DonasiUang::findOrFail($id);
+        $donasiUang = DonasiUang::where('id_donasi_uang', $id)->firstOrFail();
         $snapToken = $donasiUang->snap_token;
         return view('donatur.donasi.bayar', compact('snapToken', 'donasiUang'));
     }
 
     public function sukses($id) {
-        $donasiUang = DonasiUang::findOrFail($id);
+        $donasiUang = DonasiUang::where('id_donasi_uang', $id)->firstOrFail();
         return view('donatur.donasi.sukses_bayar', compact('donasiUang'));
     }
 
@@ -165,10 +172,14 @@ class DonaturController extends Controller
 
             Log::info("Midtrans Notification received - OrderID: $orderId, Status: $transaction");
 
+            // PERBAIKAN 1: Cari dengan lebih aman
             $donasiUang = DonasiUang::where('order_id', $orderId)->first();
 
+            // PERBAIKAN 2: Jangan return 404 agar Midtrans tidak terus melakukan retry 
+            // yang membebani server Anda. Cukup log error-nya.
             if (!$donasiUang) {
-                return response()->json(['message' => 'Order not found'], 404);
+                Log::warning("Webhook error: Order ID $orderId tidak ditemukan di database!");
+                return response()->json(['message' => 'Order not found, but request acknowledged'], 200);
             }
 
             // Mapping status
@@ -180,21 +191,29 @@ class DonaturController extends Controller
                 $statusTujuan = 'pending';
             }
             
-            // Update status jika ada perubahan
+            // Perbaikan Logika: Pencegahan update berulang dan penanganan null
+            // Pastikan kita tidak melakukan update jika status sudah sama
             if ($donasiUang->status !== $statusTujuan) {
                 $donasiUang->update(['status' => $statusTujuan]);
                 
-                Donasi::where('id_donasi', $donasiUang->id_donasi)
-                      ->update(['status_donasi' => $statusTujuan]);
+                // Update tabel Donasi induk dengan pengecekan apakah donasi ada
+                $donasi = Donasi::where('id_donasi', $donasiUang->id_donasi)->first();
+                if ($donasi) {
+                    $donasi->update(['status_donasi' => $statusTujuan]);
+                }
                 
                 Log::info("Status updated for OrderID: $orderId to $statusTujuan");
+            } else {
+                Log::info("Status already up-to-date for OrderID: $orderId, no action taken.");
             }
 
             return response()->json(['message' => 'Success'], 200);
 
         } catch (\Exception $e) {
             Log::error("Midtrans Notification Error: " . $e->getMessage());
-            return response()->json(['message' => 'Server Error'], 500);
+            // Berikan response 500 hanya jika benar-benar ada kesalahan server, 
+            // bukan karena data tidak ketemu.
+            return response()->json(['message' => 'Server Error: ' . $e->getMessage()], 500);
         }
     }
 
