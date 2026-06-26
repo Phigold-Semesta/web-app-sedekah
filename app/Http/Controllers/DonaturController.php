@@ -71,9 +71,43 @@ class DonaturController extends Controller
 
     // --- AREA DASHBOARD & MEMBER (ONLINE) ---
 
-    public function dashboard() {
-        return view('donatur.dashboard');
+  public function dashboard() {
+    $donaturId = Auth::guard('donatur')->id();
+    $tahun = date('Y'); // Dinamis mengikuti tahun saat ini
+
+    // 1. Data Stats: Query langsung ke tabel Donasi agar akurat & anti-bug
+    $totalDonasi = \App\Models\Donasi::where('id_donatur', $donaturId)
+        ->where('jenis_donasi', 'uang')
+        ->whereIn('status_donasi', ['donasi berhasil terkirim', 'berhasil', 'settlement'])
+        ->sum('jumlah');
+
+    $donasiBerhasil = \App\Models\Donasi::where('id_donatur', $donaturId)
+        ->whereIn('status_donasi', ['donasi berhasil terkirim', 'berhasil', 'settlement'])
+        ->count();
+
+    $kunjungan = \App\Models\Kunjungan::where('id_donatur', $donaturId)->count();
+
+    // 2. Data Chart (Januari - Juni) Dinamis dari Database
+    $chartData = [];
+    for($i = 1; $i <= 6; $i++) {
+        $totalBulanIni = \App\Models\Donasi::where('id_donatur', $donaturId)
+            ->where('jenis_donasi', 'uang')
+            ->whereIn('status_donasi', ['donasi berhasil terkirim', 'berhasil', 'settlement'])
+            ->whereMonth('tgl_donasi', $i)
+            ->whereYear('tgl_donasi', $tahun)
+            ->sum('jumlah');
+        
+        $chartData[] = (int) $totalBulanIni;
     }
+
+    // 3. Aktivitas Terakhir (5 data terbaru)
+    $aktivitas = \App\Models\Donasi::where('id_donatur', $donaturId)
+        ->latest('tgl_donasi')
+        ->take(5)
+        ->get();
+
+    return view('donatur.dashboard', compact('totalDonasi', 'donasiBerhasil', 'kunjungan', 'chartData', 'aktivitas', 'tahun'));
+}
 
     public function riwayat() {
     // 1. Ambil ID Donatur yang login

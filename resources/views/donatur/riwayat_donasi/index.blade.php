@@ -1,90 +1,89 @@
 @extends('layouts.donatur_app')
 
-@section('page_title', 'Riwayat Donasi')
+@section('page_title', 'Dashboard Donatur')
 
 @section('content')
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <h2 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Riwayat Donasi</h2>
-        <p class="text-slate-500 font-medium mt-1">Daftar jejak kebaikan yang telah Anda salurkan.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    @php
+        $stats = [
+            ['Total Donasi Uang', 'Rp ' . number_format($totalDonasi, 0, ',', '.'), 'fa-wallet', 'text-emerald-700 dark:text-emerald-400'], 
+            ['Donasi Berhasil', $donasiBerhasil, 'fa-check-circle', 'text-emerald-500'], 
+            ['Kunjungan', $kunjungan, 'fa-door-open', 'text-blue-500'], 
+            ['Status', 'Aktif', 'fa-user-check', 'text-amber-500']
+        ];
+    @endphp
+    @foreach($stats as $stat)
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-all hover:scale-[1.02]">
+        <div class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center {{ $stat[3] }}">
+            <i class="fas {{ $stat[2] }} text-xl"></i>
+        </div>
+        <div>
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">{{ $stat[0] }}</p>
+            <h3 class="text-lg font-black text-slate-800 dark:text-white">{{ $stat[1] }}</h3>
+        </div>
     </div>
-    
-    <div class="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Tampil:</span>
-        <select onchange="window.location.href = this.value" class="bg-slate-50 dark:bg-slate-800 border-0 rounded-lg text-xs font-bold text-slate-700 dark:text-white p-2 cursor-pointer focus:ring-0 focus:outline-none">
-            <option value="{{ request()->fullUrlWithQuery(['per_page' => 5]) }}" {{ request('per_page') == 5 ? 'selected' : '' }}>5</option>
-            <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page') == 10 || !request('per_page') ? 'selected' : '' }}>10</option>
-            <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-            <option value="{{ request()->fullUrlWithQuery(['per_page' => 99999]) }}" {{ request('per_page') == 99999 ? 'selected' : '' }}>Semua</option>
-        </select>
-    </div>
+    @endforeach
 </div>
 
-<div class="bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-slate-50 dark:bg-slate-800/50">
-                    <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tanggal</th>
-                    <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Jenis</th>
-                    <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Detail Donasi</th>
-                    <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                @forelse($riwayatDonasi as $item)
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all duration-200">
-                    <td class="px-8 py-6 font-bold text-slate-600 dark:text-slate-300">
-                        {{ \Carbon\Carbon::parse($item->tgl_donasi)->format('d M Y') }}
-                    </td>
-                    <td class="px-8 py-6 font-bold text-slate-800 dark:text-white uppercase tracking-tight">
-                        Donasi {{ $item->jenis_donasi }}
-                    </td>
-                    <td class="px-8 py-6 font-bold text-emerald-600">
-                        @if(trim(strtolower($item->jenis_donasi)) == 'uang')
-                            Rp {{ number_format(optional($item->donasiUang)->nominal ?? ($item->jumlah ?? 0), 0, ',', '.') }}
-                        @else
-                            <div class="text-slate-800 dark:text-white">{{ $item->nama_barang ?? '-' }}</div>
-                            <div class="text-[11px] text-slate-400 font-medium">{{ $item->jumlah_barang ?? 0 }} {{ $item->satuan ?? '' }}</div>
-                        @endif
-                    </td>
-                    <td class="px-8 py-6">
-                        @php
-                            $rawStatus = trim(strtolower($item->status_donasi));
-                            // Map Status
-                            $statusMap = [
-                                'berhasil' => 'donasi berhasil terkirim',
-                                'settlement' => 'donasi berhasil terkirim',
-                                'belum bayar' => 'pending',
-                            ];
-                            $status = $statusMap[$rawStatus] ?? $rawStatus;
-                            
-                            // Map Warna
-                            $colors = [
-                                'pending' => 'bg-orange-100 text-orange-700', // Warna Orange diminta
-                                'donasi berhasil terkirim' => 'bg-emerald-100 text-emerald-700',
-                                'donasi gagal' => 'bg-red-100 text-red-700',
-                            ];
-                            $colorClass = $colors[$status] ?? 'bg-slate-100 text-slate-600';
-                        @endphp
-                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black {{ $colorClass }} uppercase tracking-wider">
-                            {{ $status }}
-                        </span>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="4" class="p-12 text-center text-slate-400 font-medium italic">
-                        Belum ada riwayat donasi yang tercatat.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-        
-        <div class="px-8 py-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50">
-            {{ $riwayatDonasi->appends(request()->input())->links() }}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">Tren Donasi Anda</h3>
+            <span class="text-[10px] bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full font-bold">TAHUN {{ $tahun }}</span>
+        </div>
+        <canvas id="donasiChart" height="100"></canvas>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+        <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase mb-6 tracking-tight">Aktivitas Terakhir</h3>
+        <div class="space-y-6">
+            @forelse($aktivitas as $item)
+                @php
+                    $statusMentah = strtolower(trim($item->status_donasi));
+                    $isBerhasil = in_array($statusMentah, ['donasi berhasil terkirim', 'berhasil', 'settlement']);
+                    $isPending = in_array($statusMentah, ['pending', 'belum bayar']);
+                    $dotColor = $isBerhasil ? 'bg-emerald-500' : ($isPending ? 'bg-orange-500' : 'bg-red-500');
+                    $statusTampil = $statusMentah == 'belum bayar' ? 'pending' : $statusMentah;
+                @endphp
+                <div class="flex items-center gap-4">
+                    <div class="w-2 h-2 rounded-full {{ $dotColor }}"></div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-800 dark:text-white capitalize">Donasi {{ $item->jenis_donasi }}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">{{ \Carbon\Carbon::parse($item->tgl_donasi)->diffForHumans() }} - {{ ucwords($statusTampil) }}</p>
+                    </div>
+                </div>
+            @empty
+                <p class="text-center text-slate-400 dark:text-slate-600 text-sm font-medium py-10">Belum ada data aktivitas</p>
+            @endforelse
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('donasiChart').getContext('2d');
+    const donasiChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+            datasets: [{
+                label: 'Jumlah Donasi (Rp)',
+                data: {!! json_encode($chartData) !!},
+                borderColor: '#059669',
+                backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                borderWidth: 4,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { 
+                y: { beginAtZero: true, grid: { display: false }, ticks: { color: '#64748b' } }, 
+                x: { grid: { display: false }, ticks: { color: '#64748b' } } 
+            }
+        }
+    });
+</script>
 @endsection
