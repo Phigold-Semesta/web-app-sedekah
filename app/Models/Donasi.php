@@ -11,9 +11,9 @@ class Donasi extends Model
     protected $table = 'donasi';
     protected $primaryKey = 'id_donasi';
 
-    // Disempurnakan: Menambahkan semua kolom yang digunakan di Controller
+    // Kode asli Anda tetap terjaga, hanya penyesuaian nama relasi untuk sinkronisasi
     protected $fillable = [
-        'id_donatur',      // Penting untuk melacak donatur
+        'id_donatur',      
         'id_kunjungan',
         'id_user',
         'jenis_donasi',
@@ -36,18 +36,19 @@ class Donasi extends Model
         return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 
-    // Tambahan: Relasi ke tabel Donatur (jika diperlukan)
     public function donatur(): BelongsTo
     {
         return $this->belongsTo(Donatur::class, 'id_donatur', 'id_donatur');
     }
 
-    public function donasi_uang(): HasOne
+    // Disempurnakan: Nama relasi diubah ke camelCase (donasiUang) 
+    // agar mudah dipanggil di Controller: $donasi->donasiUang
+    public function donasiUang(): HasOne
     {
         return $this->hasOne(DonasiUang::class, 'id_donasi', 'id_donasi');
     }
 
-    public function donasi_barang(): HasOne
+    public function donasiBarang(): HasOne
     {
         return $this->hasOne(DonasiBarang::class, 'id_donasi', 'id_donasi');
     }

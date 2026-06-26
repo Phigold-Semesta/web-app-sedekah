@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Notification;
 use Midtrans\Config;
-use Illuminate\Support\Facades\DB; // <--- Tambahkan di bagian atas controller
+use Illuminate\Support\Facades\DB;
 
 class DonaturController extends Controller
 {
@@ -76,9 +76,23 @@ class DonaturController extends Controller
     }
 
     public function riwayat() {
-        return view('donatur.riwayat_donasi.index');
-    }
+    // 1. Ambil ID Donatur yang login
+    $donaturId = Auth::guard('donatur')->id();
 
+    // 2. Ambil nilai per_page dari URL, default-nya 10
+    $perPage = request('per_page', 10);
+
+    // 3. Gunakan paginate() alih-alih get()
+    // withQueryString() sangat penting agar parameter 'per_page' tidak hilang 
+    // saat kita klik pindah halaman (page 2, 3, dst)
+    $riwayatDonasi = Donasi::where('id_donatur', $donaturId)
+        ->with('donasiUang')
+        ->orderBy('tgl_donasi', 'desc')
+        ->paginate($perPage)
+        ->withQueryString();
+
+    return view('donatur.riwayat_donasi.index', compact('riwayatDonasi'));
+}
     // --- AREA DONASI ONLINE (MENU SIDEBAR) ---
 
     public function indexDonasi() {
@@ -94,56 +108,63 @@ class DonaturController extends Controller
     }
 
     public function storeDonasi(Request $request) {
-    $request->validate([
-        'jenis_donasi' => 'required|in:uang,barang',
-        'jumlah' => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
-        'nama_barang' => 'required_if:jenis_donasi,barang|nullable|string',
-        'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
-        'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
-    ]);
-
-    // --- MULAI TRANSAKSI ---
-    return DB::transaction(function () use ($request) {
-        $donasi = Donasi::create([
-            'id_user'      => 999, 
-            'id_kunjungan'  => null, 
-            'status_donasi' => 'belum bayar',
-            'tgl_donasi'    => now(),
+        $request->validate([
+            'jenis_donasi' => 'required|in:uang,barang',
+            'jumlah' => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
+            'nama_barang' => 'required_if:jenis_donasi,barang|nullable|string',
+            'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
+            'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
         ]);
 
-        if ($request->jenis_donasi === 'uang') {
-            $orderId = 'SED-' . time() . '-' . $donasi->id_donasi;
-            
-            $donasiUang = DonasiUang::create([
-                'id_donasi' => $donasi->id_donasi,
-                'nominal'   => $request->jumlah,
-                'order_id'  => $orderId,
-                'status'    => 'belum bayar',
+        // --- MULAI TRANSAKSI ---
+        return DB::transaction(function () use ($request) {
+            // PERBAIKAN: id_user = 999 (Sistem), id_donatur = Donatur Login
+            $donasi = Donasi::create([
+                'id_user'       => 999, 
+                'id_donatur'    => Auth::guard('donatur')->id(), 
+                'id_kunjungan'  => $request->id_kunjungan ?? null,
+                'jenis_donasi'  => $request->jenis_donasi,
+                'jumlah'        => $request->jumlah,
+                'nama_barang'   => $request->nama_barang,
+                'jumlah_barang' => $request->jumlah_barang,
+                'satuan'        => $request->satuan,
+                'status_donasi' => 'berhasil',
+                'tgl_donasi'    => now(),
             ]);
 
-            $params = [
-                'transaction_details' => [
-                    'order_id' => $orderId,
-                    'gross_amount' => (int)$request->jumlah,
-                ],
-                'callbacks' => [ // INI PENTING (Berdasarkan pembahasan kita tadi)
-                    'finish' => route('donatur.donasi.sukses', $donasiUang->id_donasi_uang)
-                ],
-                'customer_details' => [
-                    'first_name' => Auth::guard('donatur')->user()->nama_donatur,
-                    'email' => Auth::guard('donatur')->user()->email,
-                ],
-            ];
+            if ($request->jenis_donasi === 'uang') {
+                $orderId = 'SED-' . time() . '-' . $donasi->id_donasi;
+                
+                $donasiUang = DonasiUang::create([
+                    'id_donasi' => $donasi->id_donasi,
+                    'nominal'   => $request->jumlah,
+                    'order_id'  => $orderId,
+                    'status'    => 'berhasil',
+                ]);
 
-            $snapToken = $this->midtransService->getSnapToken($params);
-            $donasiUang->update(['snap_token' => $snapToken]);
+                $params = [
+                    'transaction_details' => [
+                        'order_id' => $orderId,
+                        'gross_amount' => (int)$request->jumlah,
+                    ],
+                    'callbacks' => [
+                        'finish' => route('donatur.donasi.sukses', $donasiUang->id_donasi_uang)
+                    ],
+                    'customer_details' => [
+                        'first_name' => Auth::guard('donatur')->user()->nama_donatur,
+                        'email' => Auth::guard('donatur')->user()->email,
+                    ],
+                ];
 
-            return view('donatur.donasi.bayar', compact('snapToken', 'donasiUang'));
-        }
+                $snapToken = $this->midtransService->getSnapToken($params);
+                $donasiUang->update(['snap_token' => $snapToken]);
 
-        return redirect()->route('donatur.donasi.index')->with('success', 'Donasi barang berhasil diajukan!');
-    });
-}
+                return view('donatur.donasi.bayar', compact('snapToken', 'donasiUang'));
+            }
+
+            return redirect()->route('donatur.donasi.index')->with('success', 'Donasi barang berhasil diajukan!');
+        });
+    }
 
     // --- AREA PEMBAYARAN & CALLBACK MIDTRANS ---
 
@@ -158,7 +179,7 @@ class DonaturController extends Controller
         return view('donatur.donasi.sukses_bayar', compact('donasiUang'));
     }
 
-    public function notificationHandler(Request $request) {
+     public function notificationHandler(Request $request) {
         try {
             Config::$serverKey = config('services.midtrans.server_key');
             Config::$isProduction = config('services.midtrans.is_production', false);
