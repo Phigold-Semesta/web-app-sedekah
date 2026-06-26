@@ -9,13 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kunjungan extends Model
 {
-    protected $table = 'kunjungan'; //
-    protected $primaryKey = 'id_kunjungan'; //
+    protected $table = 'kunjungan';
+    protected $primaryKey = 'id_kunjungan';
 
     protected $fillable = [
         'id_donatur',
         'tgl_kunjungan',
         'tujuan_kunjungan',
+        'nama_donatur',          // Ditambahkan (Sesuai Controller)
+        'no_hp',         // Ditambahkan (Sesuai Controller)
+        'tujuan',        // Ditambahkan (Sesuai Controller)
+        'status',        // Ditambahkan (Sesuai Controller)
     ];
 
     public function donatur(): BelongsTo

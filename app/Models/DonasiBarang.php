@@ -7,15 +7,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DonasiBarang extends Model
 {
-    protected $table = 'donasi_barang'; //
-    protected $primaryKey = 'id_donasi_barang'; //
+    protected $table = 'donasi_barang';
+    protected $primaryKey = 'id_donasi_barang';
 
     protected $fillable = [
         'id_donasi',
         'id_kategori_barang',
         'nama_barang',
         'jumlah_barang',
-        'satuan_barang',
+        'satuan_barang', // Ini adalah key yang dikirim form
         'keterangan_sasaran',
     ];
 

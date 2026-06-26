@@ -8,15 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DonasiUang extends Model
 {
-    protected $table = 'donasi_uang'; 
-    protected $primaryKey = 'id_donasi_uang'; 
+    protected $table = 'donasi_uang';
+    protected $primaryKey = 'id_donasi_uang';
 
     protected $fillable = [
         'id_donasi',
         'nominal',
         'order_id',
         'snap_token',
-        'status', // Kolom status telah ditambahkan untuk sinkronisasi webhook Midtrans
+        'status',
     ];
 
     public function donasi(): BelongsTo

@@ -11,7 +11,6 @@ class Donasi extends Model
     protected $table = 'donasi';
     protected $primaryKey = 'id_donasi';
 
-    // Kode asli Anda tetap terjaga, hanya penyesuaian nama relasi untuk sinkronisasi
     protected $fillable = [
         'id_donatur',      
         'id_kunjungan',
@@ -41,8 +40,6 @@ class Donasi extends Model
         return $this->belongsTo(Donatur::class, 'id_donatur', 'id_donatur');
     }
 
-    // Disempurnakan: Nama relasi diubah ke camelCase (donasiUang) 
-    // agar mudah dipanggil di Controller: $donasi->donasiUang
     public function donasiUang(): HasOne
     {
         return $this->hasOne(DonasiUang::class, 'id_donasi', 'id_donasi');

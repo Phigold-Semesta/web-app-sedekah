@@ -6,14 +6,16 @@ use Illuminate\Http\Request;
 use App\Models\Kunjungan;
 use App\Models\Donasi;
 use App\Models\DonasiUang;
+use App\Models\DonasiBarang;
 use App\Models\Donatur;
-use App\Services\MidtransService;
+use App\Services\MidtransService; // Sesuaikan path jika berbeda
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Notification;
 use Midtrans\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator; // Tambahkan ini di bagian atas Controller
 
 class DonaturController extends Controller
 {
@@ -276,80 +278,94 @@ class DonaturController extends Controller
         return view('donatur.kunjungan.create');
     }
 
-   public function storeKunjungan(Request $request) {
-    // 1. Validasi Ketat (Tanpa Auto-Fill)
-    $request->validate([
-        'nama' => 'required|string|max:255',
+ public function storeKunjungan(Request $request) 
+{
+    $validator = Validator::make($request->all(), [
+        'nama_donatur' => 'required|string|max:255',
         'no_hp' => 'required|string',
-        'tujuan' => 'required|string',
-        // Validasi opsional donasi
-        'wants_to_donate' => 'nullable', 
-        'jenis_donasi' => 'required_if:wants_to_donate,1|in:uang,barang',
-        'jumlah' => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
-        'nama_barang' => 'required_if:jenis_donasi,barang|nullable|string',
-        'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
-        'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
+        'tujuan_kunjungan' => 'required|string',
+        'nominal' => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
     ]);
 
-    // 2. Eksekusi Transaksi (Pasti Aman & Konsisten)
-    return DB::transaction(function () use ($request) {
-        
-        // Simpan Kunjungan (Buku Tamu)
-        $kunjungan = Kunjungan::create([
-            'nama' => $request->nama,
-            'no_hp' => $request->no_hp,
-            'tujuan' => $request->tujuan,
-            'status' => 'belum dilayani',
-        ]);
+    if ($validator->fails()) {
+        return response()->json(['message' => 'Validasi gagal: ' . $validator->errors()->first()], 422);
+    }
 
-        // 3. Logika Jika Donatur Ingin Berdonasi
-        if ($request->has('wants_to_donate')) {
-            $donasi = Donasi::create([
-                'id_kunjungan' => $kunjungan->id_kunjungan,
-                'jenis_donasi' => $request->jenis_donasi,
-                'status_donasi' => $request->jenis_donasi == 'uang' ? 'belum bayar' : 'berhasil',
-                'tgl_donasi' => now(),
+    try {
+        return DB::transaction(function () use ($request) {
+            
+            // 1. Simpan Donatur Dulu (Agar dapat id_donatur)
+            $donatur = Donatur::create([
+                'nama_donatur' => $request->nama_donatur,
+                'no_hp'        => $request->no_hp,
+                'alamat'       => $request->alamat ?? '-',
+                'email'        => $request->email ?? '',
             ]);
 
-            if ($request->jenis_donasi == 'uang') {
-                $orderId = 'SED-' . time() . '-' . $donasi->id_donasi;
-                $donasiUang = DonasiUang::create([
-                    'id_donasi' => $donasi->id_donasi,
-                    'nominal' => $request->jumlah,
-                    'order_id' => $orderId,
-                    'status' => 'belum bayar',
+            // 2. Simpan Kunjungan (Hubungkan dengan id_donatur yang baru dibuat)
+            $kunjungan = Kunjungan::create([
+                'id_donatur'       => $donatur->id_donatur,
+                'tgl_kunjungan'    => now(),
+                'tujuan_kunjungan' => $request->tujuan_kunjungan,
+                'nama'             => $request->nama_donatur,
+                'no_hp'            => $request->no_hp,
+                'tujuan'           => $request->tujuan_kunjungan,
+                'status'           => 'belum dilayani',
+            ]);
+
+            // 3. Logika Donasi
+            if ($request->filled('jenis_donasi')) {
+                $donasi = Donasi::create([
+                    'id_kunjungan'  => $kunjungan->id_kunjungan,
+                    'id_donatur'    => $donatur->id_donatur,
+                    'jenis_donasi'  => $request->jenis_donasi,
+                    'status_donasi' => $request->jenis_donasi == 'uang' ? 'belum bayar' : 'berhasil',
+                    'tgl_donasi'    => now(),
                 ]);
 
-                // Integrasi Midtrans untuk Bayar Langsung
-                $params = [
-                    'transaction_details' => [
-                        'order_id' => $orderId,
-                        'gross_amount' => (int)$request->jumlah,
-                    ],
-                    'customer_details' => [
-                        'first_name' => $request->nama,
-                        'phone' => $request->no_hp,
-                    ],
-                ];
+                if ($request->jenis_donasi == 'uang') {
+                    $orderId = 'SED-' . time() . '-' . $donasi->id_donasi;
+                    $donasiUang = DonasiUang::create([
+                        'id_donasi' => $donasi->id_donasi,
+                        'nominal'   => $request->nominal,
+                        'order_id'  => $orderId,
+                        'status'    => 'berhasil',
+                    ]);
 
-                $snapToken = $this->midtransService->getSnapToken($params);
-                $donasiUang->update(['snap_token' => $snapToken]);
+                    $params = [
+                        'transaction_details' => [
+                            'order_id'     => $orderId,
+                            'gross_amount' => (int)$request->nominal,
+                        ],
+                        'customer_details' => [
+                            'first_name' => $request->nama_donatur,
+                            'phone'      => $request->no_hp,
+                        ],
+                        'callbacks' => [
+                            // ✅ Tambahkan parameter status agar bisa dideteksi saat redirect
+                            'finish' => url('/donatur/kunjungan/create') . '?status=success&order_id=' . $orderId,
+                        ],
+                    ];
 
-                // Redirect ke halaman pembayaran
-                return redirect()->route('donatur.donasi.bayar', $donasiUang->id_donasi_uang)
-                                 ->with('success', 'Kunjungan tercatat! Silakan selesaikan donasi Anda.');
-            } else {
-                // Jika Barang
-                \App\Models\DonasiBarang::create([
-                    'id_donasi' => $donasi->id_donasi,
-                    'nama_barang' => $request->nama_barang,
-                    'jumlah_barang' => $request->jumlah_barang,
-                    'satuan' => $request->satuan,
-                ]);
+                    $snapToken = $this->midtransService->getSnapToken($params);
+                    $donasiUang->update(['snap_token' => $snapToken]);
+
+                    return response()->json(['snap_token' => $snapToken]);
+                } else {
+                    DonasiBarang::create([
+                        'id_donasi'     => $donasi->id_donasi,
+                        'nama_barang'   => $request->nama_barang,
+                        'jumlah_barang' => $request->jumlah_barang,
+                        'satuan_barang' => $request->satuan_barang,
+                    ]);
+                }
             }
-        }
 
-        return redirect()->back()->with('success', 'Terima kasih telah berkunjung ke Yayasan Rumah Harapan!');
-    });
+            return response()->json(['message' => 'Berhasil disimpan!']);
+        });
+    } catch (\Exception $e) {
+        Log::error("Error Store Kunjungan: " . $e->getMessage());
+        return response()->json(['message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()], 500);
+    }
 }
 }
