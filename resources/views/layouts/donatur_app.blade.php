@@ -84,44 +84,91 @@
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden">
-            <header class="h-20 bg-white/80 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center px-6 lg:px-10 shrink-0">
-                <div class="flex items-center gap-4">
-                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-emerald-600 dark:text-emerald-400">
+            <header class="h-20 bg-white/80 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center px-4 sm:px-6 lg:px-10 shrink-0">
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <!-- Tombol Hamburger Mobile -->
+                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-emerald-600 dark:text-emerald-400 p-2 hover:bg-emerald-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
-                    <h2 class="text-slate-800 dark:text-white font-black text-lg lg:text-xl uppercase italic tracking-tighter">
+                    <h2 class="text-slate-800 dark:text-white font-black text-base sm:text-lg lg:text-xl uppercase italic tracking-tighter">
                         @yield('page_title', 'Dashboard')
                     </h2>
                 </div>
                 
                 <div class="flex items-center gap-3 lg:gap-4">
-                    <button @click="toggleTheme()" class="text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-lg transition-colors">
+                    <!-- Tombol Dark Mode -->
+                    <button @click="toggleTheme()" class="text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 text-lg transition-colors p-2">
                         <i class="fa-solid" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
                     </button>
+                    
+                    <!-- Profil Donatur Dinamis -->
                     <div class="flex items-center gap-3 pl-3 lg:pl-4 border-l border-slate-200 dark:border-slate-700">
                         <div class="text-right hidden sm:block">
-                            <p class="text-xs font-bold text-slate-800 dark:text-white">{{ Auth::user()->name ?? 'Donatur' }}</p>
+                            <!-- PERBAIKAN: Mengambil data tepat dari kolom 'nama_donatur' -->
+                            @php
+                                $namaDonatur = Auth::guard('donatur')->user()->nama_donatur ?? 'Donatur';
+                            @endphp
+                            <p class="text-xs font-bold text-slate-800 dark:text-white truncate max-w-[120px] lg:max-w-[200px]">{{ $namaDonatur }}</p>
                             <p class="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Donatur</p>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name={{ Auth::user()->name ?? 'User' }}&background=065f46&color=fff" class="w-9 h-9 rounded-xl border-2 border-emerald-500">
+                        <!-- Foto Avatar Dinamis dari inisial nama -->
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($namaDonatur) }}&background=065f46&color=fff&bold=true" alt="Avatar" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border-2 border-emerald-500 shadow-sm object-cover">
                     </div>
                 </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto p-6 lg:p-10 bg-[#f8fafc] dark:bg-[#041a16] transition-colors">
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 bg-[#f8fafc] dark:bg-[#041a16] transition-colors">
                 @yield('content')
             </div>
         </main>
     </div>
 
-    <!-- Mobile Sidebar -->
-    <div x-show="sidebarOpen" x-cloak @click="sidebarOpen = false" class="fixed inset-0 bg-black/50 z-50 lg:hidden"></div>
-    <div x-show="sidebarOpen" x-cloak class="fixed left-0 top-0 h-full w-64 bg-[#065f46] z-[60] lg:hidden p-6 text-white shadow-2xl">
-        <h3 class="font-black text-lg mb-8 uppercase">SEDEKAH Menu</h3>
-        <a href="{{ route('donatur.dashboard') }}" class="block py-4 font-bold border-b border-white/10">Dashboard</a>
-        <a href="{{ route('donatur.donasi.index') }}" class="block py-4 font-bold border-b border-white/10">Donasi</a>
-        <a href="{{ route('donatur.riwayat.index') }}" class="block py-4 font-bold border-b border-white/10">Riwayat</a>
-        <button onclick="confirmLogout(event)" class="block w-full text-left py-4 mt-4 text-red-300 font-bold">Keluar</button>
+    <!-- Background Overlay Mobile Sidebar dengan efek fade -->
+    <div x-show="sidebarOpen" x-cloak 
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false" 
+         class="fixed inset-0 bg-black/60 z-50 lg:hidden backdrop-blur-sm">
+    </div>
+
+    <!-- Mobile Sidebar dengan efek slide dari kiri -->
+    <div x-show="sidebarOpen" x-cloak 
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="-translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-300 transform"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="-translate-x-full"
+         class="fixed left-0 top-0 h-full w-64 bg-[#065f46] z-[60] lg:hidden p-6 text-white shadow-2xl flex flex-col">
+        
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="font-black text-lg uppercase tracking-widest text-emerald-300">SEDEKAH</h3>
+            <button @click="sidebarOpen = false" class="text-white hover:text-emerald-300">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <nav class="flex-1 space-y-2">
+            <a href="{{ route('donatur.dashboard') }}" class="block px-4 py-3 rounded-xl font-bold {{ request()->routeIs('donatur.dashboard') ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-desktop w-6"></i> Dashboard
+            </a>
+            <a href="{{ route('donatur.donasi.index') }}" class="block px-4 py-3 rounded-xl font-bold {{ request()->routeIs('donatur.donasi.*') ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-heart w-6"></i> Donasi
+            </a>
+            <a href="{{ route('donatur.riwayat.index') }}" class="block px-4 py-3 rounded-xl font-bold {{ request()->routeIs('donatur.riwayat.index') ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white' }}">
+                <i class="fas fa-history w-6"></i> Riwayat
+            </a>
+        </nav>
+
+        <div class="mt-auto pt-4 border-t border-white/10">
+            <button onclick="confirmLogout(event)" class="w-full flex items-center px-4 py-3 text-red-300 hover:bg-red-500/10 rounded-xl font-bold transition-colors">
+                <i class="fas fa-power-off w-6"></i> Keluar
+            </button>
+        </div>
     </div>
 
     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">@csrf</form>
