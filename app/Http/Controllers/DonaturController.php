@@ -122,7 +122,7 @@ class DonaturController extends Controller
     // withQueryString() sangat penting agar parameter 'per_page' tidak hilang 
     // saat kita klik pindah halaman (page 2, 3, dst)
     $riwayatDonasi = Donasi::where('id_donatur', $donaturId)
-        ->with('donasiUang')
+        ->with('Donasi_Uang')
         ->orderBy('tgl_donasi', 'desc')
         ->paginate($perPage)
         ->withQueryString();
