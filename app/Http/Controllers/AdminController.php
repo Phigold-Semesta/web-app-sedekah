@@ -729,7 +729,7 @@ public function verifikasi_update(Request $request, string|int $id_donasi): Redi
     
     // Validasi status yang diizinkan
     $request->validate([
-        'status' => 'required|in:Selesai,Ditolak'
+        'status' => 'required|in:Terverifikasi,Ditolak'
     ]);
 
     // Update status dan catat siapa admin yang memprosesnya

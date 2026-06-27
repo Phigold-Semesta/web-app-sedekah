@@ -45,7 +45,7 @@
                     <th class="px-8 py-2 text-left">Jenis Donasi</th>
                     <th class="px-8 py-2 text-left">Bukti Foto</th>
                     <th class="px-8 py-2 text-left">Tanggal</th>
-                    <th class="px-8 py-2 text-left">Status</th>
+                    <th class="px-8 py-2 text-left">Status Kirim</th>
                     <th class="px-8 py-2 text-center">Actions</th>
                 </tr>
             </thead>
@@ -68,7 +68,6 @@
                             {{ $donasi->donasi_uang ? 'Uang' : 'Barang' }}
                         </span>
                     </td>
-                    {{-- Kolom Bukti Foto Baru --}}
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-slate-800">
                         @if($donasi->bukti_donasi)
                             <a href="{{ asset('storage/' . $donasi->bukti_donasi) }}" target="_blank" 
@@ -91,9 +90,9 @@
                         <form action="{{ route('admin.verifikasi.update', $donasi->id_donasi) }}" method="POST">
                             @csrf
                             <select name="status" onchange="this.form.submit()" class="bg-slate-50 border-0 text-[10px] font-black uppercase tracking-widest rounded-xl p-3 cursor-pointer text-emerald-800 hover:bg-emerald-50 transition">
-                                <option value="Pending" selected>Pending</option>
-                                <option value="Selesai">Selesai</option>
-                                <option value="Ditolak">Ditolak</option>
+                                <option value="Pending" {{ $donasi->status_donasi == 'Pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="Terverifikasi" {{ $donasi->status_donasi == 'Terverifikasi' ? 'selected' : '' }}>Terverifikasi</option>
+                                <option value="Ditolak" {{ $donasi->status_donasi == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
                             </select>
                         </form>
                     </td>
@@ -112,4 +111,28 @@
     .custom-scrollbar::-webkit-scrollbar { height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #008f5d22; border-radius: 10px; }
 </style>
+
+{{-- SweetAlert2 CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            confirmButtonColor: '#008f5d',
+            confirmButtonText: 'OK'
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: "{{ session('error') }}",
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'OK'
+        });
+    @endif
+</script>
 @endsection
