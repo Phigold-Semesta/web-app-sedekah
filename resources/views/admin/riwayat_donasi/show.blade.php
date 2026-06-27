@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid px-4 py-4">
     <div class="mb-4">
-        <a href="{{ route('admin.riwayat') }}" class="text-decoration-none text-secondary small fw-semibold d-inline-flex align-items-center mb-2">
+        <a href="{{ route('admin.riwayat_donasi.index') }}" class="text-decoration-none text-secondary small fw-semibold d-inline-flex align-items-center mb-2">
             <i class="fas fa-arrow-left me-1.5"></i> Kembali ke Riwayat Induk
         </a>
         <div class="d-flex justify-content-between align-items-start">
@@ -173,7 +173,7 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
                     <h5 class="fw-bold text-dark mb-3"><i class="fas fa-sliders-h text-secondary me-2"></i>Otorisasi Status</h5>
-                    <form action="{{ route('admin.riwayat.update_status', $donasi->id_donasi) }}" method="POST">
+                    <form action="{{ route('admin.riwayat_donasi.update_status', $donasi->id_donasi) }}" method="POST">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
