@@ -135,72 +135,99 @@ class DonaturController extends Controller
         return view('donatur.donasi.index');
     }
 
-    public function createDonasi(Request $request) {
-        $jenis = $request->query('jenis');
-        if ($jenis === 'barang') {
-            return view('donatur.donasi.create_barang');
-        }
-        return view('donatur.donasi.create_uang');
-    }
+  public function createDonasi(Request $request) {
+    $jenis = $request->query('jenis');
+    
+    // Ambil data kategori dari tabel kategori_barang
+    $kategori = \App\Models\KategoriBarang::all(); 
 
-    public function storeDonasi(Request $request) {
-        $request->validate([
-            'jenis_donasi' => 'required|in:uang,barang',
-            'jumlah' => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
-            'nama_barang' => 'required_if:jenis_donasi,barang|nullable|string',
-            'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
-            'satuan' => 'required_if:jenis_donasi,barang|nullable|string',
+    if ($jenis === 'barang') {
+        // Kirim $kategori ke view agar bisa dipakai di Blade
+        return view('donatur.donasi.create_barang', compact('kategori'));
+    }
+    return view('donatur.donasi.create_uang');
+}
+
+   public function storeDonasi(Request $request) 
+{
+    // 1. Validasi Diperketat (Menambahkan foto_barang)
+    $request->validate([
+        'jenis_donasi'  => 'required|in:uang,barang',
+        'jumlah'        => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
+        'nama_barang'   => 'required_if:jenis_donasi,barang|nullable|string',
+        'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
+        'satuan'        => 'required_if:jenis_donasi,barang|nullable|string',
+        'foto_barang'   => 'required_if:jenis_donasi,barang|nullable|image|max:2048', // Validasi file
+    ]);
+
+    // --- MULAI TRANSAKSI ---
+    return DB::transaction(function () use ($request) {
+        
+        // 2. Handle File Upload (Jika ada foto barang)
+        $buktiPath = null;
+        if ($request->hasFile('foto_barang')) {
+            $buktiPath = $request->file('foto_barang')->store('bukti_donasi', 'public');
+        }
+
+        // 3. Simpan ke Tabel Induk 'donasi'
+        $donasi = Donasi::create([
+            'id_user'       => 999, 
+            'id_donatur'    => Auth::guard('donatur')->id(), 
+            'id_kunjungan'  => $request->id_kunjungan ?? null,
+            'jenis_donasi'  => $request->jenis_donasi,
+            'jumlah'        => $request->jumlah,
+            'nama_barang'   => $request->nama_barang,
+            'jumlah_barang' => $request->jumlah_barang,
+            'satuan'        => $request->satuan,
+            'bukti_donasi'  => $buktiPath, // Menyimpan lokasi file
+            'status_donasi' => 'berhasil',
+            'tgl_donasi'    => now(),
         ]);
 
-        // --- MULAI TRANSAKSI ---
-        return DB::transaction(function () use ($request) {
-            // PERBAIKAN: id_user = 999 (Sistem), id_donatur = Donatur Login
-            $donasi = Donasi::create([
-                'id_user'       => 999, 
-                'id_donatur'    => Auth::guard('donatur')->id(), 
-                'id_kunjungan'  => $request->id_kunjungan ?? null,
-                'jenis_donasi'  => $request->jenis_donasi,
-                'jumlah'        => $request->jumlah,
-                'nama_barang'   => $request->nama_barang,
-                'jumlah_barang' => $request->jumlah_barang,
-                'satuan'        => $request->satuan,
-                'status_donasi' => 'berhasil',
-                'tgl_donasi'    => now(),
+        // 4. Logika Jika Uang (Midtrans)
+        if ($request->jenis_donasi === 'uang') {
+            $orderId = 'SED-' . time() . '-' . $donasi->id_donasi;
+            
+            $donasiUang = DonasiUang::create([
+                'id_donasi' => $donasi->id_donasi,
+                'nominal'   => $request->jumlah,
+                'order_id'  => $orderId,
+                'status'    => 'berhasil',
             ]);
 
-            if ($request->jenis_donasi === 'uang') {
-                $orderId = 'SED-' . time() . '-' . $donasi->id_donasi;
-                
-                $donasiUang = DonasiUang::create([
-                    'id_donasi' => $donasi->id_donasi,
-                    'nominal'   => $request->jumlah,
-                    'order_id'  => $orderId,
-                    'status'    => 'berhasil',
-                ]);
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $orderId,
+                    'gross_amount' => (int)$request->jumlah,
+                ],
+                'callbacks' => [
+                    'finish' => route('donatur.donasi.sukses', $donasiUang->id_donasi_uang)
+                ],
+                'customer_details' => [
+                    'first_name' => Auth::guard('donatur')->user()->nama_donatur,
+                    'email' => Auth::guard('donatur')->user()->email,
+                ],
+            ];
 
-                $params = [
-                    'transaction_details' => [
-                        'order_id' => $orderId,
-                        'gross_amount' => (int)$request->jumlah,
-                    ],
-                    'callbacks' => [
-                        'finish' => route('donatur.donasi.sukses', $donasiUang->id_donasi_uang)
-                    ],
-                    'customer_details' => [
-                        'first_name' => Auth::guard('donatur')->user()->nama_donatur,
-                        'email' => Auth::guard('donatur')->user()->email,
-                    ],
-                ];
+            $snapToken = $this->midtransService->getSnapToken($params);
+            $donasiUang->update(['snap_token' => $snapToken]);
 
-                $snapToken = $this->midtransService->getSnapToken($params);
-                $donasiUang->update(['snap_token' => $snapToken]);
-
-                return view('donatur.donasi.bayar', compact('snapToken', 'donasiUang'));
-            }
-
+            return view('donatur.donasi.bayar', compact('snapToken', 'donasiUang'));
+        } 
+        // 5. Logika Jika Barang (Menyimpan ke tabel donasi_barang)
+        else {
+            \App\Models\DonasiBarang::create([
+                'id_donasi'          => $donasi->id_donasi,
+                'id_kategori_barang' => $request->id_kategori_barang, // Dari form
+                'nama_barang'        => $request->nama_barang,
+                'jumlah_barang'      => $request->jumlah_barang,
+                'satuan_barang'      => $request->satuan, // Mapping dari input 'satuan'
+            ]);
+            
             return redirect()->route('donatur.donasi.index')->with('success', 'Donasi barang berhasil diajukan!');
-        });
-    }
+        }
+    });
+}
 
     // --- AREA PEMBAYARAN & CALLBACK MIDTRANS ---
 
@@ -302,16 +329,17 @@ class DonaturController extends Controller
                 'email'        => $request->email ?? '',
             ]);
 
-            // 2. Simpan Kunjungan (Hubungkan dengan id_donatur yang baru dibuat)
-            $kunjungan = Kunjungan::create([
-                'id_donatur'       => $donatur->id_donatur,
-                'tgl_kunjungan'    => now(),
-                'tujuan_kunjungan' => $request->tujuan_kunjungan,
-                'nama'             => $request->nama_donatur,
-                'no_hp'            => $request->no_hp,
-                'tujuan'           => $request->tujuan_kunjungan,
-                'status'           => 'belum dilayani',
-            ]);
+            // Pastikan kode di dalam storeKunjungan seperti ini:
+
+$kunjungan = Kunjungan::create([
+    'id_donatur'       => $donatur->id_donatur,
+    'tgl_kunjungan'    => now(),
+    'tujuan_kunjungan' => $request->tujuan_kunjungan, // <--- Kunci ini WAJIB ada
+    'nama'             => $request->nama_donatur,
+    'no_hp'            => $request->no_hp,
+    'tujuan'           => $request->tujuan_kunjungan, // Mengisi kolom 'tujuan' (sebagai cadangan)
+    'status'           => 'belum dilayani',
+]);
 
             // 3. Logika Donasi
             if ($request->filled('jenis_donasi')) {

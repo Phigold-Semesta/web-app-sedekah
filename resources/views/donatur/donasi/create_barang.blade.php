@@ -57,6 +57,17 @@
             </div>
 
             <div>
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Kategori Barang</label>
+                <select name="id_kategori_barang" 
+                        class="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl md:rounded-3xl px-5 py-4 md:py-5 focus:border-amber-500 outline-none text-base md:text-lg text-slate-800 dark:text-white font-bold transition-all appearance-none cursor-pointer" required>
+                    <option value="" disabled selected>Pilih Kategori</option>
+                    @foreach($kategori as $kat)
+                        <option value="{{ $kat->id_kategori_barang }}">{{ $kat->nama_kategori }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
                 <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Foto Barang</label>
                 <input type="file" name="foto_barang" accept="image/*"
                        class="w-full bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl md:rounded-3xl px-4 py-4 md:py-5 text-slate-500 file:mr-3 md:file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200 transition-all cursor-pointer" required>

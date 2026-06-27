@@ -37,4 +37,23 @@
 
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@if(session('success'))
+    <script>
+        Swal.fire({
+            title: 'Jazakalloh Khoiron!',
+            text: '{{ session("success") }}',
+            icon: 'success',
+            confirmButtonText: 'Tutup',
+            confirmButtonColor: '#059669', // Emerald-600
+            background: '#ffffff',
+            color: '#1e293b',
+            customClass: {
+                title: 'font-black uppercase tracking-widest',
+                confirmButton: 'font-black uppercase'
+            }
+        });
+    </script>
+@endif
 @endsection
