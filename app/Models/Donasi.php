@@ -40,12 +40,14 @@ class Donasi extends Model
         return $this->belongsTo(Donatur::class, 'id_donatur', 'id_donatur');
     }
 
-    public function donasiUang(): HasOne
+    // PERBAIKAN: Diubah menjadi donasi_uang (snake_case) agar sinkron dengan Controller
+    public function donasi_uang(): HasOne
     {
         return $this->hasOne(DonasiUang::class, 'id_donasi', 'id_donasi');
     }
 
-    public function donasiBarang(): HasOne
+    // PERBAIKAN: Diubah menjadi donasi_barang (snake_case) agar sinkron dengan Controller
+    public function donasi_barang(): HasOne
     {
         return $this->hasOne(DonasiBarang::class, 'id_donasi', 'id_donasi');
     }

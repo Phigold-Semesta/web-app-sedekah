@@ -72,7 +72,7 @@
                             <td class="px-6 py-4 text-xs font-bold">{{ $uang->created_at->format('d/m/Y') }}</td>
                             <td class="px-6 py-4 text-xs font-black text-emerald-600">Rp {{ number_format($uang->nominal, 0, ',', '.') }}</td>
                             <td class="px-6 py-4">
-                                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 rounded-full text-[9px] font-black uppercase">Lunas</span>
+                                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 rounded-full text-[9px] font-black uppercase">Donasi Berhasil Terkirim</span>
                             </td>
                         </tr>
                         @empty
@@ -107,7 +107,7 @@
                         <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                             <td class="px-6 py-4 text-xs font-bold">{{ $barang->created_at->format('d/m/Y') }}</td>
                             <td class="px-6 py-4 text-xs font-black text-slate-700 dark:text-emerald-50">{{ $barang->nama_barang }}</td>
-                            <td class="px-6 py-4 text-xs font-bold">{{ $barang->jumlah }} {{ $barang->satuan }}</td>
+                            <td class="px-6 py-4 text-xs font-bold">{{ $barang->jumlah_barang }} {{ $barang->satuan_barang }}</td>
                         </tr>
                         @empty
                         <tr>
