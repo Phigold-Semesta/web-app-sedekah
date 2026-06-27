@@ -23,23 +23,37 @@ class DirekturController extends Controller
     /**
      * Menampilkan Dashboard Direktur dengan data statistik.
      */
-    public function index()
-    {
-        // Data statistik untuk project SEDEKAH
-        $data = [
-            'totalAsetYayasan'    => 1250000000, 
-            'totalDonasiTahunIni' => 450000000,
-            'targetTahunan'        => 1000000000,
-            'jumlahDonaturTetap'  => 85,
-            'persentaseTarget'    => 45,
-            'pertumbuhan'          => 12.5,
-            'chartLabels'          => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-            'chartData'            => [15, 28, 22, 35, 30, 45]
-        ];
-        
-        return view('direktur.dashboard', $data);
+ public function index()
+{
+    $year = Carbon::now()->year;
+
+    // 1. Statistik Dasar - Ganti 'jumlah' menjadi 'nominal'
+    $totalDonasiTahunIni = \App\Models\DonasiUang::whereYear('created_at', $year)->sum('nominal');
+    $targetTahunan = 1000000000; 
+    $jumlahDonaturTetap = \App\Models\Donatur::count();
+    $persentaseTarget = ($totalDonasiTahunIni / $targetTahunan) * 100;
+    
+    // 2. Data Grafik (Per Bulan) - Ganti 'jumlah' menjadi 'nominal'
+    $monthlyData = \App\Models\DonasiUang::select(DB::raw('MONTH(created_at) as month'), DB::raw('SUM(nominal) as total'))
+        ->whereYear('created_at', $year)
+        ->groupBy('month')
+        ->pluck('total', 'month');
+
+    $chartLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN'];
+    $chartData = [];
+    for ($i = 1; $i <= 6; $i++) {
+        // Dibagi 1.000.000 agar sesuai skala visual chart
+        $chartData[] = ($monthlyData->get($i, 0)) / 1000000; 
     }
 
+    // 3. Log Aktivitas
+    $logs = \App\Models\AuditLog::with('user')->latest()->take(3)->get();
+
+    return view('direktur.dashboard', compact(
+        'totalDonasiTahunIni', 'targetTahunan', 'jumlahDonaturTetap', 
+        'persentaseTarget', 'chartLabels', 'chartData', 'logs'
+    ));
+}
     /**
      * Fitur Export Terpadu untuk Logistik Donasi Barang
      */
