@@ -15,8 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // Mendaftarkan alias middleware agar bisa dipanggil di web.php
         $middleware->alias([
             'checkrole' => \App\Http\Middleware\CheckRole::class,
+            // ALIAS INI YANG MENGHILANGKAN LOGIN LOOP
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class, 
         ]);
-
+// bootstrap/app.php
+$middleware->alias([
+    'checkrole' => \App\Http\Middleware\CheckRole::class,
+    'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+    'no-cache' => \App\Http\Middleware\PreventBackHistory::class, // Tambahkan ini
+]);
         // Menyempurnakan dengan mengecualikan rute notifikasi dari validasi CSRF
         $middleware->validateCsrfTokens(except: [
             'api/donatur/donasi/notification-handler',

@@ -76,13 +76,16 @@ class AuthController extends Controller
             ->withInput($request->only('username'));
     }
 
-    /**
+  /**
      * Menangani proses keluar (logout) manual.
      */
     public function logout(Request $request): RedirectResponse
     {
-        Auth::logout();
+        // Logout dari semua guard yang mungkin aktif
+        Auth::guard('web')->logout();      // Aktor Internal (Admin/Direktur)
+        Auth::guard('donatur')->logout();  // Aktor Donatur
 
+        // Membersihkan sesi dan regenerasi token untuk mencegah error 419 Page Expired
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
