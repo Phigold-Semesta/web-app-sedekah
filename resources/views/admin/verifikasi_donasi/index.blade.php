@@ -43,6 +43,7 @@
                 <tr class="text-[#008f5d] dark:text-emerald-400 text-[10px] font-black uppercase tracking-[0.3em] italic">
                     <th class="px-8 py-2 text-left">Donatur Identity</th>
                     <th class="px-8 py-2 text-left">Jenis Donasi</th>
+                    <th class="px-8 py-2 text-left">Bukti Foto</th>
                     <th class="px-8 py-2 text-left">Tanggal</th>
                     <th class="px-8 py-2 text-left">Status</th>
                     <th class="px-8 py-2 text-center">Actions</th>
@@ -67,6 +68,17 @@
                             {{ $donasi->donasi_uang ? 'Uang' : 'Barang' }}
                         </span>
                     </td>
+                    {{-- Kolom Bukti Foto Baru --}}
+                    <td class="px-8 py-6 border-y border-emerald-50 dark:border-slate-800">
+                        @if($donasi->bukti_donasi)
+                            <a href="{{ asset('storage/' . $donasi->bukti_donasi) }}" target="_blank" 
+                               class="text-[10px] font-black text-[#008f5d] underline uppercase tracking-widest hover:text-emerald-700 transition-colors">
+                               Lihat Foto
+                            </a>
+                        @else
+                            <span class="text-[10px] text-slate-400 font-bold uppercase italic">-</span>
+                        @endif
+                    </td>
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-slate-800">
                         <span class="text-xs font-bold text-slate-600 dark:text-slate-300">{{ $donasi->created_at->format('d F Y') }}</span>
                     </td>
@@ -88,7 +100,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-8 py-20 text-center text-slate-400 font-black uppercase tracking-widest">Tidak ada data pending</td>
+                    <td colspan="6" class="px-8 py-20 text-center text-slate-400 font-black uppercase tracking-widest">Tidak ada data pending</td>
                 </tr>
                 @endforelse
             </tbody>

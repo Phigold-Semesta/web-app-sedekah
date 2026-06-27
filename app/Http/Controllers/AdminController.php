@@ -23,11 +23,24 @@ class AdminController extends Controller
      * Dashboard Utama Administrator.
      * Menampilkan ringkasan statistik donasi dan kunjungan.
      */
-    public function index(): View
-    {
-        return view('admin.dashboard');
-    }
+   public function index(): \Illuminate\View\View
+{
+    $totalDonasiBulanIni = \App\Models\DonasiUang::whereMonth('created_at', now()->month)->sum('nominal');
+    $jumlahDonatur = \App\Models\Donatur::count();
+    $kunjunganHariIni = \App\Models\Kunjungan::whereDate('tgl_kunjungan', now())->count();
+    $avgRating = \App\Models\Penilaian::avg('skor_rating') ?: 0;
+    
+    $antreanDonasi = \App\Models\Donasi::with(['kunjungan.donatur'])->where('status_donasi', 'Pending')->latest()->take(3)->get();
 
+    // Data Dinamis untuk Pie & Line Chart
+    $metode = \App\Models\Pembayaran::select('metode_pembayaran', \Illuminate\Support\Facades\DB::raw('count(*) as total'))->groupBy('metode_pembayaran')->get();
+    $tren = \App\Models\DonasiUang::select(\Illuminate\Support\Facades\DB::raw('DATE(created_at) as date'), \Illuminate\Support\Facades\DB::raw('SUM(nominal) as total'))
+            ->groupBy('date')->orderBy('date', 'ASC')->take(7)->get();
+
+    return view('admin.dashboard', compact(
+        'totalDonasiBulanIni', 'jumlahDonatur', 'kunjunganHariIni', 'avgRating', 'antreanDonasi', 'metode', 'tren'
+    ));
+}
     /**
      * Validasi Bukti Transaksi.
      * Menampilkan daftar donasi yang masuk dan perlu diverifikasi admin.
@@ -699,9 +712,8 @@ class AdminController extends Controller
  */
 public function verifikasi_index(): View
 {
-    // Mengambil donasi dengan relasi ke donatur dan detail donasi
     $donasi_list = Donasi::with(['kunjungan.donatur', 'donasi_uang', 'donasi_barang'])
-        ->where('status_donasi', 'Pending')
+        ->where('status_donasi', 'berhasil') // Ubah dari 'Pending' ke 'berhasil'
         ->orderBy('id_donasi', 'desc')
         ->get();
         
