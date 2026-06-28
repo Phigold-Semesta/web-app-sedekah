@@ -52,12 +52,27 @@
     <div class="flex min-h-screen relative">
         <!-- Sidebar Desktop -->
         <aside id="main-sidebar" class="hidden lg:flex bg-[#065f46] h-screen text-white flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
-            <div class="p-6 h-24 flex items-center shrink-0 border-b border-white/5">
-                <div class="logo-full flex items-center gap-3">
-                    <div class="bg-white p-2 rounded-xl text-emerald-700"><i class="fas fa-hand-holding-heart text-lg"></i></div>
-                    <span class="font-extrabold text-lg uppercase leading-none">SEDEKAH<br><span class="text-emerald-300 text-[9px] tracking-[0.2em]">DONATUR</span></span>
-                </div>
-            </div>
+           <div class="p-6 h-24 flex items-center shrink-0 border-b border-white/5 relative overflow-hidden group">
+    
+    <div class="logo-full flex items-center gap-3 transition-opacity duration-300 group-hover:opacity-0 opacity-100">
+        <div class="bg-white p-2 rounded-xl shadow-lg shrink-0 flex items-center justify-center w-10 h-10">
+            <i class="fas fa-hand-holding-heart text-[#046A38] text-lg"></i>
+        </div>
+        <div class="flex flex-col">
+            <span class="font-extrabold tracking-tighter text-lg uppercase leading-none text-white">Sistem</span>
+            <span class="text-emerald-400 text-[9px] font-black tracking-[0.3em] uppercase">Aplikasi Sedekah</span>
+        </div>
+    </div>
+
+    <div class="icon-collapsed absolute left-6 flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white p-3 rounded-2xl shadow-xl flex items-center justify-center w-12 h-12">
+            <i class="fas fa-hand-holding-heart text-[#046A38] text-xl"></i>
+        </div>
+    </div>
+    <nav class="flex-1 mt-8 overflow-y-auto custom-scrollbar">
+</div>
+
+            
 
             <nav class="flex-1 mt-8">
                 <a href="{{ route('donatur.dashboard') }}" class="nav-item {{ request()->routeIs('donatur.dashboard') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
