@@ -707,6 +707,13 @@ class AdminController extends Controller
         return view('admin.rating_kunjungan.index', compact('rating_list'));
     }
 
+public function simpan_tanggapan(Request $request, $id_rating) 
+{
+    $penilaian = \App\Models\Penilaian::findOrFail($id_rating);
+    $penilaian->update(['tanggapan' => $request->tanggapan]);
+
+    return response()->json(['message' => 'Berhasil']); // Ini sangat penting untuk AJAX!
+}
     /**
  * Menampilkan halaman verifikasi donasi (status: Pending).
  */

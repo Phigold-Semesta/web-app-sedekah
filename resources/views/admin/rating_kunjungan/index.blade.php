@@ -88,14 +88,26 @@
             </thead>
             <tbody>
                 @forelse($rating_list as $rating)
-                @php
-                    $rowId = $rating->id_rating ?? $rating->id ?? $loop->index;
-                    
-                    // Memperbaiki ekstraksi nama dan email secara dinamis dan aman melalui relasi Eager Loading
-                    $namaPengguna = $rating->user->name ?? ($rating->kunjungan->donatur->nama_donatur ?? ($rating->kunjungan->tamu->nama_tamu ?? 'Muzakki / Anonim'));
-                    $emailPengguna = $rating->user->email ?? ($rating->kunjungan->donatur->no_hp ?? ($rating->kunjungan->gmail ?? ($rating->kunjungan->tamu->email ?? '-')));
-                    $namaLayanan = $rating->program->nama_program ?? ($rating->kunjungan->layanan->nama_layanan ?? 'Transaksi Sedekah');
-                @endphp
+               @php
+    $rowId = $rating->id_penilaian ?? $rating->id ?? $loop->index;
+    
+    // 1. Ambil objek donatur (Cek relasi langsung dulu, jika tidak ada baru cek relasi kunjungan)
+    $donatur = $rating->donatur ?? ($rating->kunjungan->donatur ?? null);
+
+    // 2. Ekstraksi Nama Pengguna
+    // Prioritas: Donatur (Langsung) -> Donatur (via Kunjungan) -> User (Admin) -> Anonim
+    $namaPengguna = $donatur->nama_donatur 
+                    ?? ($rating->user->name ?? 'Anonim');
+
+    // 3. Ekstraksi Kontak/Email Pengguna
+    // Prioritas: No HP Donatur -> Email User -> '-'
+    $emailPengguna = $donatur->no_hp 
+                     ?? ($rating->user->email ?? '-');
+
+    // 4. Nama Layanan
+    // Prioritas: Layanan via Kunjungan -> Default 'Donasi Online'
+    $namaLayanan = $rating->kunjungan->layanan->nama_layanan ?? 'Donasi Online';
+@endphp
 
                 <tr class="bg-white dark:bg-slate-800 hover:shadow-lg hover:shadow-emerald-950/5 dark:hover:shadow-black/30 border border-emerald-50/50 dark:border-slate-700/50 transition-all duration-200 group">
                     
@@ -199,28 +211,19 @@
                                             </p>
                                         </div>
 
-                                        {{-- Form Tanggapan Admin/Petugas Sedekah --}}
-                                        <form action="{{ url('/admin/rating-kunjungan/' . ($rating->id_rating ?? $rating->id) . '/tanggapan') }}" method="POST" class="space-y-4">
-                                            @csrf
-                                            <div class="space-y-2">
-                                                <label class="block text-slate-700 dark:text-slate-300 text-xs font-black uppercase tracking-tight">Kirim Respon / Evaluasi Sistem:</label>
-                                                <textarea name="tanggapan" rows="3" required placeholder="Tulis tanggapan atau evaluasi untuk kenyamanan donasi..."
-                                                          class="w-full p-4 bg-slate-50 dark:bg-slate-900 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#046A38]/20 dark:focus:ring-emerald-500/20 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 leading-relaxed">{{ $rating->tanggapan ?? '' }}</textarea>
-                                                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">*Respon ini ditujukan sebagai bentuk evaluasi internal atau feedback transparansi kepada pengguna.</p>
-                                            </div>
-
-                                            {{-- Actions Footer --}}
-                                            <div class="flex justify-end gap-2 pt-2">
-                                                <button type="button" onclick="closeModalRating('{{ $rowId }}')"
-                                                        class="px-5 py-3 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">
-                                                    Tutup
-                                                </button>
-                                                <button type="submit" 
-                                                        class="px-5 py-3 bg-[#046A38] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#03532B] shadow-lg shadow-emerald-900/20 transition-all flex items-center gap-2">
-                                                    <i class="fas fa-paper-plane"></i> Simpan Respon
-                                                </button>
-                                            </div>
-                                        </form>
+                                        {{-- Form Tanggapan (Tanpa action/method di HTML) --}}
+<form id="form-tanggapan-{{ $rating->id_penilaian }}" onsubmit="submitTanggapan(event, '{{ $rating->id_penilaian }}')">
+    @csrf
+    <div class="space-y-2">
+        <label class="block text-slate-700 dark:text-slate-300 text-xs font-black uppercase tracking-tight">Kirim Respon:</label>
+        <textarea name="tanggapan" rows="3" required class="w-full p-4 bg-slate-50 dark:bg-slate-900 border-0 rounded-2xl text-xs font-bold">{{ $rating->tanggapan }}</textarea>
+    </div>
+    <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModalRating('{{ $rating->id_penilaian }}')" class="px-5 py-3 bg-slate-100 rounded-xl text-[10px] font-black uppercase">Tutup</button>
+        <button type="submit" class="px-5 py-3 bg-[#046A38] text-white text-[10px] font-black uppercase rounded-xl shadow-lg">Simpan Respon</button>
+    </div>
+</form>
+                                      
                                     </div>
                                 </div>
                             </div>
@@ -355,4 +358,46 @@
         color: #94a3b8;
     }
 </style>
+
+<script>
+async function submitTanggapan(event, id_penilaian) {
+    event.preventDefault(); // Mencegah reload halaman
+    
+    const form = document.getElementById('form-tanggapan-' + id_penilaian);
+    const formData = new FormData(form);
+    
+    // Tampilkan loading
+    Swal.fire({
+        title: 'Sedang menyimpan...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+        // Kirim data via fetch (AJAX)
+        const response = await fetch(`/admin/rating-kunjungan/${id_penilaian}/tanggapan`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Respon berhasil dikirim.',
+                confirmButtonColor: '#046A38'
+            }).then(() => {
+                location.reload(); // Refresh untuk melihat perubahan status
+            });
+        } else {
+            throw new Error(result.message || 'Gagal menyimpan.');
+        }
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Oops...', text: error.message });
+    }
+}
+</script>
 @endsection
