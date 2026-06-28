@@ -51,14 +51,21 @@
             </thead>
             <tbody>
                 @forelse($donasi_list as $donasi)
+                @php
+                    // Detektif menemukan pelakunya: Kunjungan null = Anonim. 
+                    // Perbaikan: Cek relasi donatur langsung terlebih dahulu.
+                    $donatur = $donasi->donatur ?? ($donasi->kunjungan->donatur ?? null);
+                    $namaDonatur = $donatur->nama_donatur ?? 'Hamba Allah';
+                    $inisial = substr($namaDonatur, 0, 1);
+                @endphp
                 <tr class="bg-white dark:bg-slate-900 shadow-xl shadow-emerald-900/5 transition-all hover:scale-[1.01]">
                     <td class="px-8 py-6 rounded-l-[2.5rem] border-y border-l border-emerald-50 dark:border-slate-800">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-gradient-to-tr from-emerald-100 to-white rounded-2xl flex items-center justify-center text-emerald-600 font-black italic uppercase shadow-sm border border-emerald-50">
-                                {{ substr($donasi->kunjungan->donatur->nama_donatur ?? 'N', 0, 1) }}
+                                {{ $inisial }}
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{{ $donasi->kunjungan->donatur->nama_donatur ?? 'Hamba Allah' }}</span>
+                                <span class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{{ $namaDonatur }}</span>
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Donasi ID #{{ str_pad($donasi->id_donasi, 4, '0', STR_PAD_LEFT) }}</span>
                             </div>
                         </div>
@@ -72,7 +79,7 @@
                         @if($donasi->bukti_donasi)
                             <a href="{{ asset('storage/' . $donasi->bukti_donasi) }}" target="_blank" 
                                class="text-[10px] font-black text-[#008f5d] underline uppercase tracking-widest hover:text-emerald-700 transition-colors">
-                               Lihat Foto
+                                Lihat Foto
                             </a>
                         @else
                             <span class="text-[10px] text-slate-400 font-bold uppercase italic">-</span>
@@ -112,27 +119,13 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #008f5d22; border-radius: 10px; }
 </style>
 
-{{-- SweetAlert2 CDN --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     @if(session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: "{{ session('success') }}",
-            confirmButtonColor: '#008f5d',
-            confirmButtonText: 'OK'
-        });
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", confirmButtonColor: '#008f5d', confirmButtonText: 'OK' });
     @endif
-
     @if(session('error'))
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: "{{ session('error') }}",
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'OK'
-        });
+        Swal.fire({ icon: 'error', title: 'Oops...', text: "{{ session('error') }}", confirmButtonColor: '#d33', confirmButtonText: 'OK' });
     @endif
 </script>
 @endsection

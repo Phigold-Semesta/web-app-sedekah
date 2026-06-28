@@ -163,7 +163,7 @@
                     <a href="{{ route('admin.rating_kunjungan.index') }}" 
                        class="nav-item {{ request()->routeIs('admin.rating_kunjungan.*') ? 'text-white bg-white/10 font-bold' : 'text-gray-400 hover:text-white hover:bg-white/5' }} flex items-center px-4 py-3 transition-all duration-200">
                         <i class="fas fa-comments w-6 text-center text-sm {{ request()->routeIs('admin.rating_kunjungan.*') ? 'text-yellow-400' : '' }}"></i>
-                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Rating Kunjungan</span>
+                        <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Rating Donatur</span>
                     </a>
 
                     <a href="{{ route('admin.verifikasi.index') }}" 
