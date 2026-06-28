@@ -204,4 +204,10 @@ Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(
     });
 
     Route::get('/riwayat', [DonaturController::class, 'riwayat'])->name('riwayat.index');
+
+    // --- RUTE RATING & KRITIK/SARAN (DITAMBAHKAN) ---
+    Route::prefix('rating')->name('rating.')->group(function () {
+        Route::get('/', [DonaturController::class, 'indexRating'])->name('index');
+        Route::post('/store', [DonaturController::class, 'storeRating'])->name('store');
+    });
 });

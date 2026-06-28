@@ -68,12 +68,17 @@
                     <i class="fas fa-heart w-6 text-center"></i>
                     <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Donasi</span>
                 </a>
-                <a href="{{ route('donatur.riwayat.index') }}" class="nav-item {{ request()->routeIs('donatur.riwayat.index') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
-                    <i class="fas fa-history w-6 text-center"></i>
-                    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat</span>
-                </a>
-            </nav>
+               <a href="{{ route('donatur.riwayat.index') }}" class="nav-item {{ request()->routeIs('donatur.riwayat.index') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-history w-6 text-center"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat</span>
+</a>
 
+<a href="{{ route('donatur.rating.index') }}" class="nav-item {{ request()->routeIs('donatur.rating.index') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-star w-6 text-center"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Rating</span>
+</a>
+
+</nav>
             <div class="p-4 mb-4">
                 <button onclick="confirmLogout(event)" class="nav-item w-full text-red-300 hover:bg-red-500/10 rounded-2xl p-4">
                     <i class="fas fa-power-off w-6 text-center"></i>

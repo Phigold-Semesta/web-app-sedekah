@@ -135,9 +135,9 @@
                     <td class="py-5">
                         <div class="flex items-center gap-0.5 text-amber-400">
                             @for($i = 1; $i <= 5; $i++)
-                                <i class="{{ $i <= $rating->skor ? 'fas' : 'far' }} fa-star text-[11px]"></i>
+                                <i class="{{ $i <= $rating->skor_rating ? 'fas' : 'far' }} fa-star text-[11px]"></i>
                             @endfor
-                            <span class="ml-1.5 text-[11px] font-black text-slate-700 dark:text-slate-300">({{ $rating->skor }}/5)</span>
+                            <span class="ml-1.5 text-[11px] font-black text-slate-700 dark:text-slate-300">({{ $rating->skor_rating }}/5)</span>
                         </div>
                     </td>
 
