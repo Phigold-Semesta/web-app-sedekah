@@ -30,6 +30,10 @@
             100% { transform: scale(1); opacity: 1; }
         }
         .modal-box { animation: popIn 0.4s ease forwards; }
+
+        /* ✅ Tombol aktif donasi */
+        .btn-donasi-aktif-uang   { background-color: #059669 !important; box-shadow: 0 0 0 3px #6ee7b7; }
+        .btn-donasi-aktif-barang { background-color: #d97706 !important; box-shadow: 0 0 0 3px #fcd34d; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 flex items-center justify-center">
@@ -63,7 +67,7 @@
     <form id="main_form" action="{{ route('donatur.kunjungan.store') }}" method="POST" enctype="multipart/form-data" 
           class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-2xl space-y-6">
         @csrf
-        <input type="hidden" name="jenis_donasi" id="jenis_donasi_input" value="">
+        {{-- ✅ DIHAPUS: hidden input jenis_donasi tunggal — sekarang pakai filled() di controller --}}
 
         <div class="space-y-4">
             <h3 class="text-[11px] font-black text-emerald-800 uppercase tracking-widest pl-2">Informasi Tamu</h3>
@@ -83,14 +87,25 @@
         <div class="space-y-2">
             <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest pl-2">Donasi (Bisa pilih keduanya):</p>
             <div class="grid grid-cols-2 gap-4">
-                <button type="button" onclick="toggleDonasi('uang')" class="py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">Donasi Uang</button>
-                <button type="button" onclick="toggleDonasi('barang')" class="py-4 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all">Donasi Barang</button>
+                {{-- ✅ Tombol toggle independen — klik lagi untuk tutup --}}
+                <button type="button" id="btn-uang" onclick="toggleDonasi('uang')"
+                    class="py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">
+                    💵 Donasi Uang
+                </button>
+                <button type="button" id="btn-barang" onclick="toggleDonasi('barang')"
+                    class="py-4 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all">
+                    📦 Donasi Barang
+                </button>
             </div>
+            <p class="text-[9px] text-emerald-600 pl-2 italic">* Klik tombol untuk buka/tutup form donasi. Bisa aktifkan keduanya sekaligus.</p>
         </div>
 
+        {{-- FORM DONASI UANG --}}
         <div id="form_uang" class="hidden space-y-4 p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
-            <p class="text-[10px] font-black text-emerald-800 uppercase">Donasi Uang</p>
-            <input type="number" name="nominal" oninput="checkNominal(this.value)" class="w-full bg-white rounded-2xl p-4 text-sm shadow-inner border border-emerald-100" placeholder="Nominal Uang (Rp)">
+            <p class="text-[10px] font-black text-emerald-800 uppercase">💵 Donasi Uang</p>
+            <input type="number" name="nominal" id="input_nominal" oninput="checkNominal(this.value)" 
+                class="w-full bg-white rounded-2xl p-4 text-sm shadow-inner border border-emerald-100" 
+                placeholder="Nominal Uang (Rp)">
             <div id="payment_info_box" class="hidden mt-4 p-6 bg-emerald-700 rounded-3xl text-white shadow-xl">
                 <p class="text-[10px] uppercase tracking-widest opacity-80">Total Donasi Uang</p>
                 <h2 id="display_amount" class="text-2xl font-black my-2">Rp 0</h2>
@@ -98,8 +113,9 @@
             </div>
         </div>
 
+        {{-- FORM DONASI BARANG --}}
         <div id="form_barang" class="hidden space-y-4 p-6 bg-amber-50 rounded-3xl border border-amber-100">
-            <p class="text-[10px] font-black text-amber-800 uppercase">Donasi Barang</p>
+            <p class="text-[10px] font-black text-amber-800 uppercase">📦 Donasi Barang</p>
             <input type="text" name="nama_barang" class="w-full bg-white rounded-2xl p-4 text-sm border border-amber-100" placeholder="Nama Barang">
 
             {{-- ✅ Select kategori barang dinamis dari database --}}
@@ -127,6 +143,9 @@
 </div>
 
 <script>
+    // ========== STATE TOGGLE — independen per jenis ==========
+    const activeForm = { uang: false, barang: false };
+
     // ========== SIMPAN DATA FORM KE SESSIONSTORAGE ==========
     function simpanFormKeSession() {
         sessionStorage.setItem('saved_form', JSON.stringify({
@@ -158,7 +177,6 @@
         const status    = urlParams.get('status');
         const orderId   = urlParams.get('order_id');
 
-        // ✅ Tangkap redirect dari Midtrans ?status=success
         if (status === 'success' && orderId) {
             const nama = sessionStorage.getItem('nama_donatur_pending') || 'Donatur';
             sessionStorage.removeItem('nama_donatur_pending');
@@ -168,20 +186,25 @@
         }
     });
 
-    // ========== TOGGLE FORM DONASI ==========
+    // ========== TOGGLE INDEPENDEN — klik lagi = tutup ==========
     function toggleDonasi(type) {
-        const formUang   = document.getElementById('form_uang');
-        const formBarang = document.getElementById('form_barang');
-        const inputJenis = document.getElementById('jenis_donasi_input');
+        const formEl  = document.getElementById('form_' + type);
+        const btnEl   = document.getElementById('btn-' + type);
+        const kelasAktif = type === 'uang' ? 'btn-donasi-aktif-uang' : 'btn-donasi-aktif-barang';
 
-        if (type === 'uang') {
-            formUang.classList.remove('hidden');
-            formBarang.classList.add('hidden');
-            inputJenis.value = 'uang';
+        activeForm[type] = !activeForm[type]; // flip state
+
+        if (activeForm[type]) {
+            formEl.classList.remove('hidden');
+            btnEl.classList.add(kelasAktif);
         } else {
-            formUang.classList.add('hidden');
-            formBarang.classList.remove('hidden');
-            inputJenis.value = 'barang';
+            formEl.classList.add('hidden');
+            btnEl.classList.remove(kelasAktif);
+            // Reset field jika form ditutup
+            if (type === 'uang') {
+                document.getElementById('input_nominal').value = '';
+                document.getElementById('payment_info_box').classList.add('hidden');
+            }
         }
     }
 
@@ -213,16 +236,21 @@
         document.getElementById('form_uang').classList.add('hidden');
         document.getElementById('form_barang').classList.add('hidden');
         document.getElementById('payment_info_box').classList.add('hidden');
-        document.getElementById('jenis_donasi_input').value = '';
+        // Reset state toggle
+        activeForm.uang   = false;
+        activeForm.barang = false;
+        document.getElementById('btn-uang').classList.remove('btn-donasi-aktif-uang');
+        document.getElementById('btn-barang').classList.remove('btn-donasi-aktif-barang');
     }
 
-    // ========== SUBMIT FORM (KUNJUNGAN / BARANG / UANG) ==========
+    // ========== SUBMIT FORM ==========
     document.getElementById('main_form').addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const btn         = document.getElementById('btn-submit');
-        const jenisDonasi = document.getElementById('jenis_donasi_input').value;
         const namaDonatur = document.getElementById('input_nama').value;
+        const adaUang     = activeForm.uang;
+        const adaBarang   = activeForm.barang;
 
         btn.disabled  = true;
         btn.innerText = "MENYIMPAN...";
@@ -242,7 +270,7 @@
             const data = await response.json();
 
             if (response.ok) {
-                // ✅ Jika donasi uang → ada snap_token → buka Midtrans
+                // ✅ Ada donasi uang → buka Midtrans Snap
                 if (data.snap_token) {
                     simpanFormKeSession();
                     sessionStorage.setItem('nama_donatur_pending', namaDonatur);
@@ -251,7 +279,11 @@
                         onSuccess: function(result) {
                             sessionStorage.removeItem('nama_donatur_pending');
                             sessionStorage.removeItem('saved_form');
-                            tampilkanModal(namaDonatur, 'Donasi uang Anda telah berhasil dikirim.');
+                            // ✅ Pesan disesuaikan: uang saja atau uang + barang
+                            const pesan = adaBarang
+                                ? 'Donasi uang & barang Anda telah berhasil dicatat!'
+                                : 'Donasi uang Anda telah berhasil dikirim.';
+                            tampilkanModal(namaDonatur, pesan);
                         },
                         onPending: function(result) {
                             tampilkanModal(namaDonatur, 'Pembayaran sedang diproses. Silakan selesaikan pembayaran Anda.');
@@ -262,13 +294,12 @@
                             alert("Pembayaran gagal. Silakan coba lagi.");
                         },
                         onClose: function() {
-                            // User tutup popup tanpa bayar — form tetap terisi
                             restoreFormDariSession();
                         }
                     });
                 } else {
-                    // ✅ Donasi barang atau kunjungan biasa → langsung modal
-                    const pesan = jenisDonasi === 'barang'
+                    // ✅ Tidak ada uang → barang saja atau kunjungan saja
+                    const pesan = adaBarang
                         ? 'Donasi barang Anda telah berhasil dicatat.'
                         : 'Data kunjungan Anda telah berhasil disimpan.';
                     tampilkanModal(namaDonatur, pesan);
