@@ -43,7 +43,22 @@
         @media (max-height: 600px) {
             #modal-sukses { align-items: flex-start; padding-top: 2rem; overflow-y: auto; }
         }
-    </style>
+    
+    /* ✅ FIX: paksa warna teks & background option terlihat di SEMUA state,
+       termasuk saat hover/focus/selected yang biasanya di-override browser
+       dengan highlight gelap + teks putih bawaan sistem. */
+    #input_kategori_barang option {
+        color: #0f172a !important;        /* slate-900 */
+        background-color: #ffffff !important;
+    }
+    #input_kategori_barang option:hover,
+    #input_kategori_barang option:focus,
+    #input_kategori_barang option:checked,
+    #input_kategori_barang option:active {
+        color: #0f172a !important;
+        background-color: #fef3c7 !important; /* amber-100, biar tetap kelihatan ada highlight tapi teks tetap gelap */
+    }
+</style>
 </head>
 <body class="min-h-screen p-3 sm:p-4 md:p-8 flex items-center justify-center">
 
@@ -127,15 +142,15 @@
             <p class="text-[10px] font-black text-amber-800 uppercase">📦 Donasi Barang</p>
             <input type="text" name="nama_barang" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm border border-amber-100" placeholder="Nama Barang">
 
-            {{-- ✅ Select kategori barang dinamis dari database --}}
-            <select name="id_kategori_barang" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm text-slate-900 border border-amber-100">
-                <option value="">Pilih Jenis Barang</option>
-                @foreach ($kategoriBarang as $kategori)
-                    <option value="{{ $kategori->id_kategori_barang }}">
-                        {{ $kategori->nama_kategori_barang }}
-                    </option>
-                @endforeach
-            </select>
+        {{-- ✅ Select kategori barang dinamis dari database --}}
+<select name="id_kategori_barang" id="input_kategori_barang" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm text-slate-900 border border-amber-100">
+    <option value="">Pilih Jenis Barang</option>
+    @foreach ($kategoriBarang as $kategori)
+        <option value="{{ $kategori->id_kategori_barang }}">
+            {{ $kategori->nama_kategori }}
+        </option>
+    @endforeach
+</select>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <input type="number" name="jumlah_barang" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm border border-amber-100" placeholder="Jumlah">
