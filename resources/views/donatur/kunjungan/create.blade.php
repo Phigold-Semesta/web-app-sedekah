@@ -178,10 +178,23 @@
         const orderId   = urlParams.get('order_id');
 
         if (status === 'success' && orderId) {
-            const nama = sessionStorage.getItem('nama_donatur_pending') || 'Donatur';
+            // ✅ FIX: baca kembali status "ada donasi barang" dari sessionStorage,
+            // karena setelah redirect dari Midtrans, semua variabel JS (termasuk
+            // activeForm.barang) sudah hilang akibat reload halaman.
+            const nama      = sessionStorage.getItem('nama_donatur_pending') || 'Donatur';
+            const adaBarang = sessionStorage.getItem('ada_barang_pending') === '1';
+
             sessionStorage.removeItem('nama_donatur_pending');
+            sessionStorage.removeItem('ada_barang_pending'); // ✅ FIX: bersihkan key baru
             sessionStorage.removeItem('saved_form');
-            tampilkanModal(nama, 'Donasi uang Anda telah berhasil dikirim.');
+
+            // ✅ FIX: pesan dibuat dinamis (bukan hardcode "Donasi uang saja"),
+            // supaya konsisten dengan pesan di onSuccess Midtrans Snap.
+            const pesan = adaBarang
+                ? 'Donasi uang & barang Anda telah berhasil dicatat!'
+                : 'Donasi uang Anda telah berhasil dikirim.';
+
+            tampilkanModal(nama, pesan);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     });
@@ -232,6 +245,7 @@
         document.getElementById('modal-sukses').classList.remove('show');
         sessionStorage.removeItem('saved_form');
         sessionStorage.removeItem('nama_donatur_pending');
+        sessionStorage.removeItem('ada_barang_pending'); // ✅ FIX: ikut dibersihkan saat modal ditutup
         document.getElementById('main_form').reset();
         document.getElementById('form_uang').classList.add('hidden');
         document.getElementById('form_barang').classList.add('hidden');
@@ -274,10 +288,12 @@
                 if (data.snap_token) {
                     simpanFormKeSession();
                     sessionStorage.setItem('nama_donatur_pending', namaDonatur);
+                    sessionStorage.setItem('ada_barang_pending', adaBarang ? '1' : '0'); // ✅ FIX: simpan status barang sebelum redirect/popup Midtrans
 
                     window.snap.pay(data.snap_token, {
                         onSuccess: function(result) {
                             sessionStorage.removeItem('nama_donatur_pending');
+                            sessionStorage.removeItem('ada_barang_pending'); // ✅ FIX: bersihkan key baru
                             sessionStorage.removeItem('saved_form');
                             // ✅ Pesan disesuaikan: uang saja atau uang + barang
                             const pesan = adaBarang
@@ -290,6 +306,7 @@
                         },
                         onError: function(result) {
                             sessionStorage.removeItem('nama_donatur_pending');
+                            sessionStorage.removeItem('ada_barang_pending'); // ✅ FIX: bersihkan key baru
                             sessionStorage.removeItem('saved_form');
                             alert("Pembayaran gagal. Silakan coba lagi.");
                         },

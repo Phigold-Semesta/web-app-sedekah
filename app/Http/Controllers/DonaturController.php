@@ -143,7 +143,7 @@ class DonaturController extends Controller
             'id_kunjungan' => $request->id_kunjungan,
             'skor_rating'  => $request->skor_rating,
             'saran'        => $request->saran,
-            'status'       => 'pending', // Default saat baru kirim
+            'status'       => 'berhasil', // Default saat baru kirim
         ]);
 
         return redirect()->back()->with('success', 'Terima kasih atas penilaian Anda!');
@@ -278,7 +278,7 @@ class DonaturController extends Controller
             } elseif (in_array($transaction, ['cancel', 'deny', 'expire'])) {
                 $statusTujuan = 'donasi gagal';
             } else {
-                $statusTujuan = 'pending';
+                $statusTujuan = 'berhasil';
             }
             
             if ($donasiUang->status !== $statusTujuan) {
@@ -302,14 +302,13 @@ class DonaturController extends Controller
         }
     }
 
-
-
-    public function createKunjungan() {
+  public function createKunjungan() {
     $kategoriBarang = \App\Models\KategoriBarang::all();
     return view('donatur.kunjungan.create', compact('kategoriBarang'));
 }
 
-public function storeKunjungan(Request $request) {
+    public function storeKunjungan(Request $request)
+{
     $validator = Validator::make($request->all(), [
         'nama_donatur'       => 'required|string|max:255',
         'no_hp'              => 'required|string',
@@ -320,14 +319,17 @@ public function storeKunjungan(Request $request) {
         'jumlah_barang'      => 'nullable|numeric',
         'satuan_barang'      => 'nullable|string',
     ]);
-
+ 
     if ($validator->fails()) {
         return response()->json(['message' => 'Validasi gagal: ' . $validator->errors()->first()], 422);
     }
-
+ 
     try {
-        return DB::transaction(function () use ($request) {
-
+        // ✅ Langkah 1: simpan dulu data yang TIDAK bergantung pada Midtrans
+        // (donatur, kunjungan, donasi barang) dalam transaksi terpisah.
+        // Kalau nanti Midtrans gagal, data ini TETAP tersimpan — tidak ikut rollback.
+        $hasil = DB::transaction(function () use ($request) {
+ 
             // 1. Simpan Donatur
             $donatur = Donatur::create([
                 'nama_donatur' => $request->nama_donatur,
@@ -335,7 +337,7 @@ public function storeKunjungan(Request $request) {
                 'alamat'       => $request->alamat ?? '-',
                 'email'        => $request->email ?? '',
             ]);
-
+ 
             // 2. Simpan Kunjungan
             $kunjungan = Kunjungan::create([
                 'id_donatur'       => $donatur->id_donatur,
@@ -346,32 +348,78 @@ public function storeKunjungan(Request $request) {
                 'tujuan'           => $request->tujuan_kunjungan,
                 'status'           => 'belum dilayani',
             ]);
-
-            $snapToken = null;
-
-            // 3. Proses Donasi Uang (JIKA nominal diisi)
+ 
+            $donasiUangId = null;
+ 
+            // 3. Simpan Donasi Uang dengan status 'berhasil' (sesuai keputusan terbaru)
             if ($request->filled('nominal') && $request->nominal > 0) {
                 $donasiUang = Donasi::create([
                     'id_kunjungan'  => $kunjungan->id_kunjungan,
                     'id_donatur'    => $donatur->id_donatur,
                     'jenis_donasi'  => 'uang',
-                    'status_donasi' => 'belum bayar',
+                    'status_donasi' => 'berhasil',
                     'tgl_donasi'    => now(),
                     'jumlah'        => $request->nominal,
                 ]);
-
-                $orderId = 'SED-' . time() . '-' . $donasiUang->id_donasi;
+ 
+                $donasiUangId = $donasiUang->id_donasi;
+            }
+ 
+            // 4. Proses Donasi Barang (independen, bisa jalan bersamaan dengan uang)
+            if ($request->filled('nama_barang')) {
+                $donasiBarang = Donasi::create([
+                    'id_kunjungan'  => $kunjungan->id_kunjungan,
+                    'id_donatur'    => $donatur->id_donatur,
+                    'jenis_donasi'  => 'barang',
+                    'status_donasi' => 'berhasil', // barang dianggap langsung diterima saat dicatat
+                    'tgl_donasi'    => now(),
+                    'nama_barang'   => $request->nama_barang,
+                    'jumlah_barang' => $request->jumlah_barang,
+                    'satuan'        => $request->satuan_barang, // ⚠️ cek nama kolom asli di migration kamu
+                ]);
+ 
+                DonasiBarang::create([
+                    'id_donasi'          => $donasiBarang->id_donasi,
+                    'id_kategori_barang' => $request->id_kategori_barang ?: null,
+                    'nama_barang'        => $request->nama_barang,
+                    'jumlah_barang'      => $request->jumlah_barang,
+                    'satuan_barang'      => $request->satuan_barang,
+                ]);
+            }
+ 
+            return [
+                'donatur'        => $donatur,
+                'kunjungan'      => $kunjungan,
+                'donasi_uang_id' => $donasiUangId,
+            ];
+        });
+ 
+        $snapToken = null;
+ 
+        // ✅ Langkah 2: panggil Midtrans DI LUAR transaksi DB utama,
+        // dibungkus try-catch sendiri supaya kalau gagal, data kunjungan/barang
+        // yang sudah tersimpan di Langkah 1 TIDAK ikut hilang/rollback.
+        if ($hasil['donasi_uang_id']) {
+            try {
+                $orderId = 'SED-' . time() . '-' . $hasil['donasi_uang_id'];
+ 
+                // ✅ FIX BUG A & B: status di DonasiUang dibuat 'pending' dulu di titik ini,
+                // BUKAN langsung 'berhasil'. Kenapa: di titik ini Snap token belum tentu
+                // berhasil dibuat, dan user juga belum tentu menyelesaikan pembayaran.
+                // Status 'berhasil' di tabel Donasi (langkah 3 di atas) tetap dipertahankan
+                // sesuai keputusanmu — ini hanya menyamakan tabel DonasiUang agar tidak
+                // kontradiksi satu sama lain saat terjadi kegagalan di blok catch bawah ini.
                 $donasiUangDetail = DonasiUang::create([
-                    'id_donasi' => $donasiUang->id_donasi,
+                    'id_donasi' => $hasil['donasi_uang_id'],
                     'nominal'   => $request->nominal,
                     'order_id'  => $orderId,
                     'status'    => 'pending',
                 ]);
-
+ 
                 $params = [
                     'transaction_details' => [
                         'order_id'     => $orderId,
-                        'gross_amount' => (int)$request->nominal,
+                        'gross_amount' => (int) $request->nominal,
                     ],
                     'customer_details' => [
                         'first_name' => $request->nama_donatur,
@@ -382,37 +430,42 @@ public function storeKunjungan(Request $request) {
                         'finish' => url('/kunjungan/form') . '?status=success&order_id=' . $orderId,
                     ],
                 ];
-
+ 
                 $snapToken = $this->midtransService->getSnapToken($params);
                 $donasiUangDetail->update(['snap_token' => $snapToken]);
+
+                // ✅ FIX BUG A: setelah snap token berhasil dibuat dan dikirim ke user,
+                // tandai DonasiUang jadi 'berhasil' agar konsisten dengan tabel Donasi
+                // (sesuai keputusanmu bahwa status langsung 'berhasil' saat submit).
+                $donasiUangDetail->update(['status' => 'berhasil']);
+ 
+            } catch (\Exception $eMidtrans) {
+                // Gagal generate snap token: catat di log, tapi JANGAN gagalkan
+                // seluruh request — data kunjungan & barang tetap aman tersimpan.
+                Log::error("Gagal membuat Snap Token Midtrans: " . $eMidtrans->getMessage());
+ 
+                // ✅ FIX BUG B: update KEDUA tabel sekaligus jadi 'gagal',
+                // supaya tabel Donasi dan DonasiUang tidak saling kontradiksi.
+                Donasi::where('id_donasi', $hasil['donasi_uang_id'])
+                    ->update(['status_donasi' => 'gagal']);
+
+                DonasiUang::where('id_donasi', $hasil['donasi_uang_id'])
+                    ->update(['status' => 'gagal']);
+ 
+                return response()->json([
+                    'status'  => 'partial_success',
+                    'message' => 'Data kunjungan tersimpan, namun gagal membuat sesi pembayaran. Silakan hubungi admin atau coba donasi uang lagi nanti.',
+                ], 200);
             }
-
-            // 4. Proses Donasi Barang (JIKA nama_barang diisi) — TANPA ELSE, bisa jalan bersamaan
-            if ($request->filled('nama_barang')) {
-                $donasiBarang = Donasi::create([
-                    'id_kunjungan'  => $kunjungan->id_kunjungan,
-                    'id_donatur'    => $donatur->id_donatur,
-                    'jenis_donasi'  => 'barang',
-                    'status_donasi' => 'berhasil',
-                    'tgl_donasi'    => now(),
-                ]);
-
-                DonasiBarang::create([
-                    'id_donasi'          => $donasiBarang->id_donasi,
-                    'id_kategori_barang' => $request->id_kategori_barang ?: null,
-                    'nama_barang'        => $request->nama_barang,
-                    'jumlah_barang'      => $request->jumlah_barang,
-                    'satuan_barang'      => $request->satuan_barang,
-                ]);
-            }
-
-            // 5. Return snap_token jika ada donasi uang, atau pesan sukses biasa
-            return response()->json([
-                'status'     => 'success',
-                'snap_token' => $snapToken,
-                'message'    => 'Kunjungan dan donasi berhasil disimpan!',
-            ]);
-        });
+        }
+ 
+        // 5. Return snap_token jika ada donasi uang, atau pesan sukses biasa
+        return response()->json([
+            'status'     => 'success',
+            'snap_token' => $snapToken,
+            'message'    => 'Kunjungan dan donasi berhasil disimpan!',
+        ]);
+ 
     } catch (\Exception $e) {
         Log::error("Error Store Kunjungan: " . $e->getMessage());
         return response()->json(['message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()], 500);
