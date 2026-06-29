@@ -174,14 +174,14 @@ class DonaturController extends Controller
             'nama_barang'   => 'required_if:jenis_donasi,barang|nullable|string',
             'jumlah_barang' => 'required_if:jenis_donasi,barang|nullable|numeric',
             'satuan'        => 'required_if:jenis_donasi,barang|nullable|string',
-            'foto_barang'   => 'required_if:jenis_donasi,barang|nullable|image|max:2048', 
+            'bukti_donasi'   => 'required_if:jenis_donasi,barang|nullable|image|max:2048', 
         ]);
 
         return DB::transaction(function () use ($request) {
             
             $buktiPath = null;
-            if ($request->hasFile('foto_barang')) {
-                $buktiPath = $request->file('foto_barang')->store('bukti_donasi', 'public');
+            if ($request->hasFile('bukti_donasi')) {
+                $buktiPath = $request->file('bukti_donasi')->store('bukti_donasi', 'public');
             }
 
             $donasi = Donasi::create([
@@ -307,7 +307,7 @@ class DonaturController extends Controller
     return view('donatur.kunjungan.create', compact('kategoriBarang'));
 }
 
-    public function storeKunjungan(Request $request)
+   public function storeKunjungan(Request $request)
 {
     $validator = Validator::make($request->all(), [
         'nama_donatur'       => 'required|string|max:255',
@@ -318,6 +318,7 @@ class DonaturController extends Controller
         'nama_barang'        => 'nullable|string|max:255',
         'jumlah_barang'      => 'nullable|numeric',
         'satuan_barang'      => 'nullable|string',
+        'bukti_donasi'        => 'nullable|image|max:2048', // ✅ TAMBAHAN: validasi file bukti donasi barang
     ]);
  
     if ($validator->fails()) {
@@ -367,6 +368,14 @@ class DonaturController extends Controller
  
             // 4. Proses Donasi Barang (independen, bisa jalan bersamaan dengan uang)
             if ($request->filled('nama_barang')) {
+
+                // ✅ TAMBAHAN: simpan file bukti_donasi ke storage SEBELUM Donasi::create(),
+                // supaya path-nya bisa langsung dimasukkan ke kolom bukti_donasi.
+                $buktiPath = null;
+                if ($request->hasFile('bukti_donasi')) {
+                    $buktiPath = $request->file('bukti_donasi')->store('bukti_donasi', 'public');
+                }
+
                 $donasiBarang = Donasi::create([
                     'id_kunjungan'  => $kunjungan->id_kunjungan,
                     'id_donatur'    => $donatur->id_donatur,
@@ -376,6 +385,7 @@ class DonaturController extends Controller
                     'nama_barang'   => $request->nama_barang,
                     'jumlah_barang' => $request->jumlah_barang,
                     'satuan'        => $request->satuan_barang, // ⚠️ cek nama kolom asli di migration kamu
+                    'bukti_donasi'  => $buktiPath, // ✅ TAMBAHAN: isi kolom bukti_donasi dengan path foto
                 ]);
  
                 DonasiBarang::create([

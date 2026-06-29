@@ -34,24 +34,33 @@
         /* ✅ Tombol aktif donasi */
         .btn-donasi-aktif-uang   { background-color: #059669 !important; box-shadow: 0 0 0 3px #6ee7b7; }
         .btn-donasi-aktif-barang { background-color: #d97706 !important; box-shadow: 0 0 0 3px #fcd34d; }
+
+        /* ✅ TAMBAHAN: penyesuaian responsive tambahan untuk layar sangat kecil (≤360px)
+           dan untuk memastikan modal tidak overflow di perangkat pendek (landscape HP). */
+        @media (max-width: 360px) {
+            .modal-box { padding: 1.5rem !important; }
+        }
+        @media (max-height: 600px) {
+            #modal-sukses { align-items: flex-start; padding-top: 2rem; overflow-y: auto; }
+        }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 flex items-center justify-center">
+<body class="min-h-screen p-3 sm:p-4 md:p-8 flex items-center justify-center">
 
 {{-- ========== MODAL SUKSES ========== --}}
 <div id="modal-sukses">
-    <div class="modal-box bg-white rounded-[2.5rem] shadow-2xl p-10 max-w-sm w-full mx-4 text-center">
-        <div class="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-14 h-14 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <div class="modal-box bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl p-6 sm:p-8 md:p-10 max-w-sm w-full mx-4 text-center max-h-[90vh] overflow-y-auto">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+            <svg class="w-12 h-12 sm:w-14 sm:h-14 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
             </svg>
         </div>
-        <h2 class="text-2xl font-black text-emerald-800 mb-2">Jazakallah Khairan!</h2>
-        <p class="text-emerald-700 font-semibold mb-1" id="modal-nama-donatur"></p>
-        <p class="text-slate-500 text-sm mb-2" id="modal-pesan">Donasi Anda telah berhasil dikirim.</p>
-        <p class="text-slate-400 text-xs mb-8">Semoga menjadi amal jariyah yang terus mengalir 🤲</p>
+        <h2 class="text-xl sm:text-2xl font-black text-emerald-800 mb-2">Jazakallah Khairan!</h2>
+        <p class="text-emerald-700 font-semibold mb-1 text-sm sm:text-base" id="modal-nama-donatur"></p>
+        <p class="text-slate-500 text-xs sm:text-sm mb-2" id="modal-pesan">Donasi Anda telah berhasil dikirim.</p>
+        <p class="text-slate-400 text-[11px] sm:text-xs mb-6 sm:mb-8">Semoga menjadi amal jariyah yang terus mengalir 🤲</p>
         <button onclick="tutupModal()" 
-            class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all">
+            class="w-full bg-emerald-600 text-white py-3.5 sm:py-4 rounded-2xl font-black uppercase tracking-widest text-xs sm:text-sm hover:bg-emerald-700 transition-all">
             Selesai
         </button>
     </div>
@@ -59,25 +68,25 @@
 {{-- ========== END MODAL ========== --}}
 
 <div class="w-full max-w-xl">
-    <div class="text-center mb-8">
-        <h1 class="text-4xl font-extrabold text-emerald-900 tracking-tight italic">SEDEKAH</h1>
-        <p class="text-emerald-700/80 font-medium">Yayasan Rumah Harapan Karawang</p>
+    <div class="text-center mb-6 sm:mb-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-emerald-900 tracking-tight italic">SEDEKAH</h1>
+        <p class="text-emerald-700/80 font-medium text-sm sm:text-base px-2">Yayasan Rumah Harapan Karawang</p>
     </div>
 
     <form id="main_form" action="{{ route('donatur.kunjungan.store') }}" method="POST" enctype="multipart/form-data" 
-          class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-2xl space-y-6">
+          class="glass-card p-5 sm:p-8 md:p-10 rounded-[1.75rem] sm:rounded-[2.5rem] shadow-2xl space-y-5 sm:space-y-6">
         @csrf
         {{-- ✅ DIHAPUS: hidden input jenis_donasi tunggal — sekarang pakai filled() di controller --}}
 
-        <div class="space-y-4">
+        <div class="space-y-3 sm:space-y-4">
             <h3 class="text-[11px] font-black text-emerald-800 uppercase tracking-widest pl-2">Informasi Tamu</h3>
-            <input type="email" name="email" id="input_email" class="w-full bg-white/50 border border-emerald-100 rounded-3xl p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all" placeholder="Alamat Email (Opsional)">
-            <input type="text" name="nama_donatur" id="input_nama" required class="w-full bg-white/50 border border-emerald-100 rounded-3xl p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all" placeholder="Nama Lengkap">
-            <input type="text" name="no_hp" id="input_nohp" required class="w-full bg-white/50 border border-emerald-100 rounded-3xl p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all" placeholder="Nomor WhatsApp">
-            <textarea name="alamat" id="input_alamat" required class="w-full bg-white/50 border border-emerald-100 rounded-3xl p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all" placeholder="Alamat Lengkap"></textarea>
+            <input type="email" name="email" id="input_email" class="w-full bg-white/50 border border-emerald-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all" placeholder="Alamat Email (Opsional)">
+            <input type="text" name="nama_donatur" id="input_nama" required class="w-full bg-white/50 border border-emerald-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all" placeholder="Nama Lengkap">
+            <input type="text" name="no_hp" id="input_nohp" required class="w-full bg-white/50 border border-emerald-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all" placeholder="Nomor WhatsApp">
+            <textarea name="alamat" id="input_alamat" required class="w-full bg-white/50 border border-emerald-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all" placeholder="Alamat Lengkap"></textarea>
         </div>
 
-        <select name="tujuan_kunjungan" id="input_tujuan" required class="w-full bg-white/50 border border-emerald-100 rounded-3xl p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all text-slate-500">
+        <select name="tujuan_kunjungan" id="input_tujuan" required class="w-full bg-white/50 border border-emerald-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 text-sm font-medium focus:ring-4 focus:ring-emerald-200 outline-none transition-all text-slate-500">
             <option value="" disabled selected>Pilih Tujuan Kunjungan</option>
             <option value="Silaturahmi">Silaturahmi</option>
             <option value="Donasi">Donasi</option>
@@ -86,14 +95,14 @@
 
         <div class="space-y-2">
             <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest pl-2">Donasi (Bisa pilih keduanya):</p>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {{-- ✅ Tombol toggle independen — klik lagi untuk tutup --}}
                 <button type="button" id="btn-uang" onclick="toggleDonasi('uang')"
-                    class="py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">
+                    class="py-3.5 sm:py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">
                     💵 Donasi Uang
                 </button>
                 <button type="button" id="btn-barang" onclick="toggleDonasi('barang')"
-                    class="py-4 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all">
+                    class="py-3.5 sm:py-4 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all">
                     📦 Donasi Barang
                 </button>
             </div>
@@ -101,25 +110,25 @@
         </div>
 
         {{-- FORM DONASI UANG --}}
-        <div id="form_uang" class="hidden space-y-4 p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
+        <div id="form_uang" class="hidden space-y-4 p-4 sm:p-6 bg-emerald-50 rounded-2xl sm:rounded-3xl border border-emerald-100">
             <p class="text-[10px] font-black text-emerald-800 uppercase">💵 Donasi Uang</p>
             <input type="number" name="nominal" id="input_nominal" oninput="checkNominal(this.value)" 
-                class="w-full bg-white rounded-2xl p-4 text-sm shadow-inner border border-emerald-100" 
+                class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm shadow-inner border border-emerald-100" 
                 placeholder="Nominal Uang (Rp)">
-            <div id="payment_info_box" class="hidden mt-4 p-6 bg-emerald-700 rounded-3xl text-white shadow-xl">
+            <div id="payment_info_box" class="hidden mt-4 p-5 sm:p-6 bg-emerald-700 rounded-2xl sm:rounded-3xl text-white shadow-xl">
                 <p class="text-[10px] uppercase tracking-widest opacity-80">Total Donasi Uang</p>
-                <h2 id="display_amount" class="text-2xl font-black my-2">Rp 0</h2>
+                <h2 id="display_amount" class="text-xl sm:text-2xl font-black my-2 break-words">Rp 0</h2>
                 <p class="text-[9px] italic">Pembayaran via Midtrans akan muncul setelah simpan data.</p>
             </div>
         </div>
 
         {{-- FORM DONASI BARANG --}}
-        <div id="form_barang" class="hidden space-y-4 p-6 bg-amber-50 rounded-3xl border border-amber-100">
+        <div id="form_barang" class="hidden space-y-4 p-4 sm:p-6 bg-amber-50 rounded-2xl sm:rounded-3xl border border-amber-100">
             <p class="text-[10px] font-black text-amber-800 uppercase">📦 Donasi Barang</p>
-            <input type="text" name="nama_barang" class="w-full bg-white rounded-2xl p-4 text-sm border border-amber-100" placeholder="Nama Barang">
+            <input type="text" name="nama_barang" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm border border-amber-100" placeholder="Nama Barang">
 
             {{-- ✅ Select kategori barang dinamis dari database --}}
-            <select name="id_kategori_barang" class="w-full bg-white rounded-2xl p-4 text-sm text-slate-500 border border-amber-100">
+            <select name="id_kategori_barang" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm text-slate-900 border border-amber-100">
                 <option value="">Pilih Jenis Barang</option>
                 @foreach ($kategoriBarang as $kategori)
                     <option value="{{ $kategori->id_kategori_barang }}">
@@ -128,15 +137,15 @@
                 @endforeach
             </select>
 
-            <div class="grid grid-cols-2 gap-4">
-                <input type="number" name="jumlah_barang" class="w-full bg-white rounded-2xl p-4 text-sm border border-amber-100" placeholder="Jumlah">
-                <input type="text" name="satuan_barang" class="w-full bg-white rounded-2xl p-4 text-sm border border-amber-100" placeholder="Satuan (Kg/Pcs)">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <input type="number" name="jumlah_barang" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm border border-amber-100" placeholder="Jumlah">
+                <input type="text" name="satuan_barang" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 text-sm border border-amber-100" placeholder="Satuan (Kg/Pcs)">
             </div>
             <label class="block text-[10px] font-bold text-amber-800 uppercase pl-2">Foto Bukti Barang</label>
-            <input type="file" name="foto_barang" accept="image/*" capture="environment" class="w-full p-4 bg-white rounded-2xl border-2 border-dashed border-amber-200 text-sm cursor-pointer">
+            <input type="file" name="bukti_donasi" accept="image/*" capture="environment" class="w-full p-3.5 sm:p-4 bg-white rounded-2xl border-2 border-dashed border-amber-200 text-sm cursor-pointer">
         </div>
 
-        <button type="submit" id="btn-submit" class="w-full bg-emerald-700 text-white py-5 rounded-3xl font-black uppercase tracking-widest text-sm hover:bg-emerald-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-emerald-200">
+        <button type="submit" id="btn-submit" class="w-full bg-emerald-700 text-white py-4 sm:py-5 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs sm:text-sm hover:bg-emerald-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-emerald-200">
             Simpan Data Kunjungan
         </button>
     </form>
@@ -255,6 +264,10 @@
         activeForm.barang = false;
         document.getElementById('btn-uang').classList.remove('btn-donasi-aktif-uang');
         document.getElementById('btn-barang').classList.remove('btn-donasi-aktif-barang');
+
+        // ✅ TAMBAHAN: setelah modal ditutup & form direset, langsung arahkan
+        // keluar dari halaman form kunjungan ini menuju Google.
+        window.location.href = "https://www.google.com";
     }
 
     // ========== SUBMIT FORM ==========
