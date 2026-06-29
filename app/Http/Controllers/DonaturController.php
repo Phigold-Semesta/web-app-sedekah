@@ -302,93 +302,108 @@ class DonaturController extends Controller
         }
     }
 
+  
+
     public function createKunjungan() {
-        return view('donatur.kunjungan.create');
+    // ✅ Kirim data kategori barang ke view agar select dinamis dari DB
+    $kategoriBarang = \App\Models\KategoriBarang::all();
+    return view('donatur.kunjungan.create', compact('kategoriBarang'));
+}
+
+public function storeKunjungan(Request $request) {
+    $validator = Validator::make($request->all(), [
+        'nama_donatur'       => 'required|string|max:255',
+        'no_hp'              => 'required|string',
+        'tujuan_kunjungan'   => 'required|string',
+        'nominal'            => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
+        // ✅ Validasi FK — pastikan id_kategori_barang benar-benar ada di DB
+        'id_kategori_barang' => 'nullable|exists:kategori_barang,id_kategori_barang',
+        'nama_barang'        => 'nullable|string|max:255',
+        'jumlah_barang'      => 'nullable|numeric',
+        'satuan_barang'      => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['message' => 'Validasi gagal: ' . $validator->errors()->first()], 422);
     }
 
-    public function storeKunjungan(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'nama_donatur' => 'required|string|max:255',
-            'no_hp' => 'required|string',
-            'tujuan_kunjungan' => 'required|string',
-            'nominal' => 'required_if:jenis_donasi,uang|nullable|numeric|min:5000',
-        ]);
+    try {
+        return DB::transaction(function () use ($request) {
 
-        if ($validator->fails()) {
-            return response()->json(['message' => 'Validasi gagal: ' . $validator->errors()->first()], 422);
-        }
+            $donatur = Donatur::create([
+                'nama_donatur' => $request->nama_donatur,
+                'no_hp'        => $request->no_hp,
+                'alamat'       => $request->alamat ?? '-',
+                'email'        => $request->email ?? '',
+            ]);
 
-        try {
-            return DB::transaction(function () use ($request) {
-                
-                $donatur = Donatur::create([
-                    'nama_donatur' => $request->nama_donatur,
-                    'no_hp'        => $request->no_hp,
-                    'alamat'       => $request->alamat ?? '-',
-                    'email'        => $request->email ?? '',
+            $kunjungan = Kunjungan::create([
+                'id_donatur'       => $donatur->id_donatur,
+                'tgl_kunjungan'    => now(),
+                'tujuan_kunjungan' => $request->tujuan_kunjungan,
+                'nama'             => $request->nama_donatur,
+                'no_hp'            => $request->no_hp,
+                'tujuan'           => $request->tujuan_kunjungan,
+                'status'           => 'belum dilayani',
+            ]);
+
+            if ($request->filled('jenis_donasi')) {
+                $donasi = Donasi::create([
+                    'id_kunjungan'  => $kunjungan->id_kunjungan,
+                    'id_donatur'    => $donatur->id_donatur,
+                    'jenis_donasi'  => $request->jenis_donasi,
+                    'status_donasi' => $request->jenis_donasi == 'uang' ? 'belum bayar' : 'berhasil',
+                    'tgl_donasi'    => now(),
                 ]);
 
-                $kunjungan = Kunjungan::create([
-                    'id_donatur'       => $donatur->id_donatur,
-                    'tgl_kunjungan'    => now(),
-                    'tujuan_kunjungan' => $request->tujuan_kunjungan,
-                    'nama'             => $request->nama_donatur,
-                    'no_hp'            => $request->no_hp,
-                    'tujuan'           => $request->tujuan_kunjungan,
-                    'status'           => 'belum dilayani',
-                ]);
-
-                if ($request->filled('jenis_donasi')) {
-                    $donasi = Donasi::create([
-                        'id_kunjungan'  => $kunjungan->id_kunjungan,
-                        'id_donatur'    => $donatur->id_donatur,
-                        'jenis_donasi'  => $request->jenis_donasi,
-                        'status_donasi' => $request->jenis_donasi == 'uang' ? 'belum bayar' : 'berhasil',
-                        'tgl_donasi'    => now(),
+                if ($request->jenis_donasi == 'uang') {
+                    $orderId    = 'SED-' . time() . '-' . $donasi->id_donasi;
+                    $donasiUang = DonasiUang::create([
+                        'id_donasi' => $donasi->id_donasi,
+                        'nominal'   => $request->nominal,
+                        'order_id'  => $orderId,
+                        'status'    => 'pending',
                     ]);
 
-                    if ($request->jenis_donasi == 'uang') {
-                        $orderId = 'SED-' . time() . '-' . $donasi->id_donasi;
-                        $donasiUang = DonasiUang::create([
-                            'id_donasi' => $donasi->id_donasi,
-                            'nominal'   => $request->nominal,
-                            'order_id'  => $orderId,
-                            'status'    => 'berhasil',
-                        ]);
+                    $params = [
+                        'transaction_details' => [
+                            'order_id'     => $orderId,
+                            'gross_amount' => (int)$request->nominal,
+                        ],
+                        'customer_details' => [
+                            'first_name' => $request->nama_donatur,
+                            'phone'      => $request->no_hp,
+                            'email'      => $request->email ?? '',
+                        ],
+                        // ✅ Callback finish agar Midtrans redirect ke halaman create
+                        // dengan ?status=success yang ditangkap JS untuk tampilkan modal
+                        'callbacks' => [
+                            'finish' => url('/donatur/kunjungan/create') . '?status=success&order_id=' . $orderId,
+                        ],
+                    ];
 
-                        $params = [
-                            'transaction_details' => [
-                                'order_id'     => $orderId,
-                                'gross_amount' => (int)$request->nominal,
-                            ],
-                            'customer_details' => [
-                                'first_name' => $request->nama_donatur,
-                                'phone'      => $request->no_hp,
-                            ],
-                            'callbacks' => [
-                                'finish' => url('/donatur/kunjungan/create') . '?status=success&order_id=' . $orderId,
-                            ],
-                        ];
+                    $snapToken = $this->midtransService->getSnapToken($params);
+                    $donasiUang->update(['snap_token' => $snapToken]);
 
-                        $snapToken = $this->midtransService->getSnapToken($params);
-                        $donasiUang->update(['snap_token' => $snapToken]);
+                    return response()->json(['snap_token' => $snapToken]);
 
-                        return response()->json(['snap_token' => $snapToken]);
-                    } else {
-                        DonasiBarang::create([
-                            'id_donasi'          => $donasi->id_donasi,
-                            'id_kategori_barang' => $request->id_kategori_barang,
-                            'nama_barang'        => $request->nama_barang,
-                            'jumlah_barang'      => $request->jumlah_barang,
-                            'satuan_barang'      => $request->satuan_barang,
-                        ]);
-                    }
+                } else {
+                    // ✅ Donasi barang — gunakan ?: null agar string kosong tidak masuk FK
+                    DonasiBarang::create([
+                        'id_donasi'          => $donasi->id_donasi,
+                        'id_kategori_barang' => $request->id_kategori_barang ?: null,
+                        'nama_barang'        => $request->nama_barang,
+                        'jumlah_barang'      => $request->jumlah_barang,
+                        'satuan_barang'      => $request->satuan_barang,
+                    ]);
                 }
-                return response()->json(['message' => 'Berhasil disimpan!']);
-            });
-        } catch (\Exception $e) {
-            Log::error("Error Store Kunjungan: " . $e->getMessage());
-            return response()->json(['message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()], 500);
-        }
+            }
+
+            return response()->json(['message' => 'Berhasil disimpan!']);
+        });
+    } catch (\Exception $e) {
+        Log::error("Error Store Kunjungan: " . $e->getMessage());
+        return response()->json(['message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()], 500);
     }
+}
 }

@@ -81,7 +81,7 @@
         </select>
 
         <div class="space-y-2">
-            <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest pl-2">Opsional: Jika Ingin Berdonasi</p>
+            <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest pl-2">Donasi (Bisa pilih keduanya):</p>
             <div class="grid grid-cols-2 gap-4">
                 <button type="button" onclick="toggleDonasi('uang')" class="py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">Donasi Uang</button>
                 <button type="button" onclick="toggleDonasi('barang')" class="py-4 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all">Donasi Barang</button>
@@ -89,24 +89,29 @@
         </div>
 
         <div id="form_uang" class="hidden space-y-4 p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
+            <p class="text-[10px] font-black text-emerald-800 uppercase">Donasi Uang</p>
             <input type="number" name="nominal" oninput="checkNominal(this.value)" class="w-full bg-white rounded-2xl p-4 text-sm shadow-inner border border-emerald-100" placeholder="Nominal Uang (Rp)">
             <div id="payment_info_box" class="hidden mt-4 p-6 bg-emerald-700 rounded-3xl text-white shadow-xl">
-                <p class="text-[10px] uppercase tracking-widest opacity-80">Total Donasi Anda</p>
+                <p class="text-[10px] uppercase tracking-widest opacity-80">Total Donasi Uang</p>
                 <h2 id="display_amount" class="text-2xl font-black my-2">Rp 0</h2>
-                <button type="button" onclick="processPayment(event)" class="w-full bg-white text-emerald-700 py-3 rounded-2xl font-black uppercase text-xs hover:bg-emerald-50 transition-all">
-                    BAYAR SEKARANG
-                </button>
+                <p class="text-[9px] italic">Pembayaran via Midtrans akan muncul setelah simpan data.</p>
             </div>
         </div>
 
         <div id="form_barang" class="hidden space-y-4 p-6 bg-amber-50 rounded-3xl border border-amber-100">
+            <p class="text-[10px] font-black text-amber-800 uppercase">Donasi Barang</p>
             <input type="text" name="nama_barang" class="w-full bg-white rounded-2xl p-4 text-sm border border-amber-100" placeholder="Nama Barang">
+
+            {{-- ✅ Select kategori barang dinamis dari database --}}
             <select name="id_kategori_barang" class="w-full bg-white rounded-2xl p-4 text-sm text-slate-500 border border-amber-100">
                 <option value="">Pilih Jenis Barang</option>
-                <option value="1">Sembako</option>
-                <option value="2">Pakaian</option>
-                <option value="3">Peralatan</option>
+                @foreach ($kategoriBarang as $kategori)
+                    <option value="{{ $kategori->id_kategori_barang }}">
+                        {{ $kategori->nama_kategori_barang }}
+                    </option>
+                @endforeach
             </select>
+
             <div class="grid grid-cols-2 gap-4">
                 <input type="number" name="jumlah_barang" class="w-full bg-white rounded-2xl p-4 text-sm border border-amber-100" placeholder="Jumlah">
                 <input type="text" name="satuan_barang" class="w-full bg-white rounded-2xl p-4 text-sm border border-amber-100" placeholder="Satuan (Kg/Pcs)">
@@ -138,23 +143,22 @@
         const saved = sessionStorage.getItem('saved_form');
         if (!saved) return;
         const f = JSON.parse(saved);
-        if (f.email)        document.getElementById('input_email').value   = f.email;
-        if (f.nama_donatur) document.getElementById('input_nama').value    = f.nama_donatur;
-        if (f.no_hp)        document.getElementById('input_nohp').value    = f.no_hp;
-        if (f.alamat)       document.getElementById('input_alamat').value  = f.alamat;
-        if (f.tujuan)       document.getElementById('input_tujuan').value  = f.tujuan;
+        if (f.email)        document.getElementById('input_email').value  = f.email;
+        if (f.nama_donatur) document.getElementById('input_nama').value   = f.nama_donatur;
+        if (f.no_hp)        document.getElementById('input_nohp').value   = f.no_hp;
+        if (f.alamat)       document.getElementById('input_alamat').value = f.alamat;
+        if (f.tujuan)       document.getElementById('input_tujuan').value = f.tujuan;
     }
 
     // ========== CEK SAAT HALAMAN LOAD ==========
     document.addEventListener('DOMContentLoaded', function () {
-        // Selalu restore form dulu supaya tidak kosong
         restoreFormDariSession();
 
         const urlParams = new URLSearchParams(window.location.search);
         const status    = urlParams.get('status');
         const orderId   = urlParams.get('order_id');
 
-        // Tampilkan modal jika redirect dari Midtrans dengan ?status=success
+        // ✅ Tangkap redirect dari Midtrans ?status=success
         if (status === 'success' && orderId) {
             const nama = sessionStorage.getItem('nama_donatur_pending') || 'Donatur';
             sessionStorage.removeItem('nama_donatur_pending');
@@ -164,10 +168,12 @@
         }
     });
 
+    // ========== TOGGLE FORM DONASI ==========
     function toggleDonasi(type) {
-        const formUang  = document.getElementById('form_uang');
+        const formUang   = document.getElementById('form_uang');
         const formBarang = document.getElementById('form_barang');
         const inputJenis = document.getElementById('jenis_donasi_input');
+
         if (type === 'uang') {
             formUang.classList.remove('hidden');
             formBarang.classList.add('hidden');
@@ -179,8 +185,9 @@
         }
     }
 
+    // ========== CEK NOMINAL ==========
     function checkNominal(val) {
-        const infoBox      = document.getElementById('payment_info_box');
+        const infoBox       = document.getElementById('payment_info_box');
         const displayAmount = document.getElementById('display_amount');
         if (val > 0) {
             infoBox.classList.remove('hidden');
@@ -190,15 +197,16 @@
         }
     }
 
+    // ========== TAMPILKAN MODAL SUKSES ==========
     function tampilkanModal(nama, pesan) {
         document.getElementById('modal-nama-donatur').innerText = nama || '';
-        document.getElementById('modal-pesan').innerText = pesan || 'Data Anda telah berhasil disimpan.';
+        document.getElementById('modal-pesan').innerText        = pesan || 'Data Anda telah berhasil disimpan.';
         document.getElementById('modal-sukses').classList.add('show');
     }
 
+    // ========== TUTUP MODAL & RESET FORM ==========
     function tutupModal() {
         document.getElementById('modal-sukses').classList.remove('show');
-        // Hapus session & reset form setelah user klik Selesai
         sessionStorage.removeItem('saved_form');
         sessionStorage.removeItem('nama_donatur_pending');
         document.getElementById('main_form').reset();
@@ -208,76 +216,18 @@
         document.getElementById('jenis_donasi_input').value = '';
     }
 
-    // ========== PROSES DONASI UANG (MIDTRANS) ==========
-    async function processPayment(event) {
-        const btn = event.target;
-        btn.disabled  = true;
-        btn.innerText = "MEMPROSES...";
-
-        const form        = document.getElementById('main_form');
-        const formData    = new FormData(form);
-        const namaDonatur = document.getElementById('input_nama').value;
-
-        try {
-            const response = await fetch("{{ route('donatur.kunjungan.store') }}", {
-                method  : 'POST',
-                body    : formData,
-                headers : { 
-                    'X-CSRF-TOKEN' : document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept'       : 'application/json' 
-                }
-            });
-            
-            const data = await response.json();
-
-            if (response.ok && data.snap_token) {
-                // ✅ Simpan nama & data form ke sessionStorage sebelum buka Midtrans
-                sessionStorage.setItem('nama_donatur_pending', namaDonatur);
-                simpanFormKeSession();
-
-                window.snap.pay(data.snap_token, {
-                    onSuccess: function(result) {
-                        // Beberapa metode tidak redirect, langsung trigger onSuccess
-                        sessionStorage.removeItem('nama_donatur_pending');
-                        sessionStorage.removeItem('saved_form');
-                        tampilkanModal(namaDonatur, 'Donasi uang Anda telah berhasil dikirim.');
-                    },
-                    onPending: function(result) {
-                        tampilkanModal(namaDonatur, 'Pembayaran sedang diproses. Silakan selesaikan pembayaran Anda.');
-                    },
-                    onError: function(result) {
-                        sessionStorage.removeItem('nama_donatur_pending');
-                        sessionStorage.removeItem('saved_form');
-                        alert("Pembayaran gagal. Silakan coba lagi.");
-                    },
-                    onClose: function() {
-                        // User tutup tanpa bayar — form tetap terisi dari sessionStorage
-                    }
-                });
-            } else {
-                alert("Gagal: " + (data.message || "Data tidak valid."));
-            }
-        } catch (error) {
-            alert("Terjadi kesalahan sistem: " + error.message);
-        } finally {
-            btn.disabled  = false;
-            btn.innerText = "BAYAR SEKARANG";
-        }
-    }
-
-    // ========== SUBMIT FORM BIASA (kunjungan / donasi barang) ==========
+    // ========== SUBMIT FORM (KUNJUNGAN / BARANG / UANG) ==========
     document.getElementById('main_form').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const jenisDonasi = document.getElementById('jenis_donasi_input').value;
-        if (jenisDonasi === 'uang') return; // dihandle processPayment
-
         const btn         = document.getElementById('btn-submit');
-        btn.disabled      = true;
-        btn.innerText     = "MENYIMPAN...";
-
-        const formData    = new FormData(this);
+        const jenisDonasi = document.getElementById('jenis_donasi_input').value;
         const namaDonatur = document.getElementById('input_nama').value;
+
+        btn.disabled  = true;
+        btn.innerText = "MENYIMPAN...";
+
+        const formData = new FormData(this);
 
         try {
             const response = await fetch("{{ route('donatur.kunjungan.store') }}", {
@@ -292,10 +242,37 @@
             const data = await response.json();
 
             if (response.ok) {
-                const pesan = jenisDonasi === 'barang'
-                    ? 'Donasi barang Anda telah berhasil dicatat.'
-                    : 'Data kunjungan Anda telah berhasil disimpan.';
-                tampilkanModal(namaDonatur, pesan);
+                // ✅ Jika donasi uang → ada snap_token → buka Midtrans
+                if (data.snap_token) {
+                    simpanFormKeSession();
+                    sessionStorage.setItem('nama_donatur_pending', namaDonatur);
+
+                    window.snap.pay(data.snap_token, {
+                        onSuccess: function(result) {
+                            sessionStorage.removeItem('nama_donatur_pending');
+                            sessionStorage.removeItem('saved_form');
+                            tampilkanModal(namaDonatur, 'Donasi uang Anda telah berhasil dikirim.');
+                        },
+                        onPending: function(result) {
+                            tampilkanModal(namaDonatur, 'Pembayaran sedang diproses. Silakan selesaikan pembayaran Anda.');
+                        },
+                        onError: function(result) {
+                            sessionStorage.removeItem('nama_donatur_pending');
+                            sessionStorage.removeItem('saved_form');
+                            alert("Pembayaran gagal. Silakan coba lagi.");
+                        },
+                        onClose: function() {
+                            // User tutup popup tanpa bayar — form tetap terisi
+                            restoreFormDariSession();
+                        }
+                    });
+                } else {
+                    // ✅ Donasi barang atau kunjungan biasa → langsung modal
+                    const pesan = jenisDonasi === 'barang'
+                        ? 'Donasi barang Anda telah berhasil dicatat.'
+                        : 'Data kunjungan Anda telah berhasil disimpan.';
+                    tampilkanModal(namaDonatur, pesan);
+                }
             } else {
                 alert("Gagal: " + (data.message || "Terjadi kesalahan."));
             }
