@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\Log;
 use Midtrans\Notification;
 use Midtrans\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str; 
 
 class DonaturController extends Controller
 {
@@ -337,6 +338,7 @@ class DonaturController extends Controller
                 'no_hp'        => $request->no_hp,
                 'alamat'       => $request->alamat ?? '-',
                 'email'        => $request->email ?? '',
+                'password'     => Hash::make(Str::random(16)),
             ]);
  
             // 2. Simpan Kunjungan
