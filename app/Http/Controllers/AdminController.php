@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB; 
 use Illuminate\Support\Facades\Validator;
 
+
 class AdminController extends Controller
 {
     /**
@@ -66,57 +67,85 @@ class AdminController extends Controller
      * --- FITUR BARU: Manajemen Jemput Donasi ---
      * Mengelola daftar donasi barang yang menunggu penjemputan oleh kurir yayasan.
      */
-    public function jemput_index(): View
+    /**
+     * --- FITUR BARU: Manajemen Jemput Donasi ---
+     * Mengelola daftar donasi barang dengan pagination & riwayat lengkap.
+     */
+  // Tambahkan di AdminController.php
+public function jemput_index(Request $request): View
 {
-    // Kita ambil semua donasi barang yang STATUSNYA BELUM "Tiba di Panti" (Selesai)
-    // Dengan begini, donasi yang "Barang Dijemput" atau "Kurir Menuju Lokasi" tetap muncul.
-    $donasi_barang = Donasi::with(['donasi_barang', 'kunjungan.donatur'])
-        ->where('jenis_donasi', 'barang')
-        ->whereNotIn('status_donasi', ['Tiba di Panti', 'berhasil']) // Tampilkan semua kecuali yang sudah sampai/selesai
-        ->orderBy('tgl_donasi', 'desc')
-        ->get();
+    $search = $request->input('search');
+    $perPage = $request->input('per_page', 10);
+
+    // Kita query DonasiBarang agar data item barang langsung siap dipakai
+    $query = \App\Models\DonasiBarang::with(['donasi.donatur']);
+
+    // Logika Pencarian
+    if ($search) {
+        $query->where('nama_barang', 'LIKE', "%{$search}%");
+    }
+
+    // Pagination
+    if ($perPage === 'all') {
+        $donasi_barang = $query->orderBy('created_at', 'desc')->paginate($query->count() ?: 10);
+    } else {
+        $donasi_barang = $query->orderBy('created_at', 'desc')->paginate((int)$perPage);
+    }
 
     return view('admin.jemput_donasi.index', compact('donasi_barang'));
 }
 
     /**
      * --- FITUR BARU: Update Status & Koordinat Pelacakan ---
-     * Menerima koordinat dari HTML5 Geolocation HP kurir dan mengubah status barang.
      */
     public function update_status_penjemputan(Request $request, $id_donasi)
-{
-    $donasi = Donasi::findOrFail($id_donasi);
-    $barang = \App\Models\DonasiBarang::where('id_donasi', $id_donasi)->first();
+    {
+        $donasi = Donasi::findOrFail($id_donasi);
+        $barang = \App\Models\DonasiBarang::where('id_donasi', $id_donasi)->first();
 
-    // 1. Update status donasi
-    $donasi->update(['status_donasi' => $request->status_pelacakan]);
+        $donasi->update(['status_donasi' => $request->status_pelacakan]);
 
-    // 2. SELALU Simpan log pelacakan, tidak peduli statusnya apa
-    if ($barang) {
-        \App\Models\PelacakanDonasiBarang::create([
-            'id_donasi_barang' => $barang->id_donasi_barang,
-            'status_pelacakan' => $request->status_pelacakan,
-            'latitude'         => $request->latitude,
-            'longitude'        => $request->longitude,
-        ]);
+        if ($barang) {
+            \App\Models\PelacakanDonasiBarang::create([
+                'id_donasi_barang' => $barang->id_donasi_barang,
+                'status_pelacakan' => $request->status_pelacakan,
+                'latitude'         => $request->latitude,
+                'longitude'        => $request->longitude,
+            ]);
+        }
+
+        return back()->with('success', 'Status berhasil diperbarui!');
     }
 
-    return back()->with('success', 'Status berhasil diperbarui!');
-}
+    /**
+     * --- FITUR BARU: Lihat Peta Penjemputan ---
+     */
+    public function jemput_peta($id_donasi)
+    {
+        $donasi = Donasi::with(['donasi_barang.pelacakan', 'donatur'])
+                    ->findOrFail($id_donasi);
 
-/**
- * --- FITUR BARU: Lihat Peta Penjemputan ---
- * Menampilkan peta lokasi kurir berdasarkan data pelacakan.
- */
-public function jemput_peta($id_donasi)
-{
-    // Cari donasi beserta relasi data barang dan data pelacakannya
-    $donasi = Donasi::with(['donasi_barang.pelacakan', 'donatur'])
-                ->findOrFail($id_donasi);
+        return view('admin.jemput_donasi.peta', compact('donasi'));
+    }
 
-    // Kirim data donasi ke view peta
-    return view('admin.jemput_donasi.peta', compact('donasi'));
-}
+    /**
+     * --- FITUR BARU: Hapus Data Penjemputan ---
+     */
+    public function destroy_jemput($id_donasi)
+    {
+        $donasi = Donasi::findOrFail($id_donasi);
+        
+        // Hapus relasi pelacakan jika ada
+        if ($donasi->donasi_barang) {
+            \App\Models\PelacakanDonasiBarang::where('id_donasi_barang', $donasi->donasi_barang->id_donasi_barang)->delete();
+            $donasi->donasi_barang->delete();
+        }
+        
+        $donasi->delete();
+
+        return back()->with('success', 'Data donasi berhasil dihapus.');
+    }
+
 
     /**
      * Riwayat Transaksi Keseluruhan (Index).
