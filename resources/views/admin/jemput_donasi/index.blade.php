@@ -44,9 +44,18 @@
                             <option value="Tiba di Panti" {{ $donasi->status_donasi == 'Tiba di Panti' ? 'selected' : '' }}>Tiba di Panti</option>
                         </select>
 
-                        <button type="button" onclick="confirmUpdate(this.form)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all active:scale-95">
-                            Update Lokasi
-                        </button>
+                        <div class="flex gap-2">
+                            {{-- Tombol Lihat Peta (Baru) --}}
+                            <a href="{{ route('admin.jemput_donasi.peta', $donasi->id_donasi) }}" 
+                               class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95 flex items-center gap-2">
+                                <i class="fas fa-map-marked-alt"></i> Peta
+                            </a>
+
+                            {{-- Tombol Update --}}
+                            <button type="button" onclick="confirmUpdate(this.form)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all active:scale-95">
+                                Update
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -73,7 +82,6 @@
             cancelButtonText: 'Batal'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Ambil Lokasi
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition((position) => {
                         form.querySelector('.lat-field').value = position.coords.latitude;

@@ -67,15 +67,17 @@ class AdminController extends Controller
      * Mengelola daftar donasi barang yang menunggu penjemputan oleh kurir yayasan.
      */
     public function jemput_index(): View
-    {
-        $donasi_barang = Donasi::with(['donasi_barang', 'kunjungan.donatur'])
-            ->where('jenis_donasi', 'barang')
-            ->whereIn('status_donasi', ['menunggu penjemputan', 'sedang dikirim'])
-            ->orderBy('tgl_donasi', 'desc')
-            ->get();
+{
+    // Kita ambil semua donasi barang yang STATUSNYA BELUM "Tiba di Panti" (Selesai)
+    // Dengan begini, donasi yang "Barang Dijemput" atau "Kurir Menuju Lokasi" tetap muncul.
+    $donasi_barang = Donasi::with(['donasi_barang', 'kunjungan.donatur'])
+        ->where('jenis_donasi', 'barang')
+        ->whereNotIn('status_donasi', ['Tiba di Panti', 'berhasil']) // Tampilkan semua kecuali yang sudah sampai/selesai
+        ->orderBy('tgl_donasi', 'desc')
+        ->get();
 
-        return view('admin.jemput_donasi.index', compact('donasi_barang'));
-    }
+    return view('admin.jemput_donasi.index', compact('donasi_barang'));
+}
 
     /**
      * --- FITUR BARU: Update Status & Koordinat Pelacakan ---
@@ -100,6 +102,20 @@ class AdminController extends Controller
     }
 
     return back()->with('success', 'Status berhasil diperbarui!');
+}
+
+/**
+ * --- FITUR BARU: Lihat Peta Penjemputan ---
+ * Menampilkan peta lokasi kurir berdasarkan data pelacakan.
+ */
+public function jemput_peta($id_donasi)
+{
+    // Cari donasi beserta relasi data barang dan data pelacakannya
+    $donasi = Donasi::with(['donasi_barang.pelacakan', 'donatur'])
+                ->findOrFail($id_donasi);
+
+    // Kirim data donasi ke view peta
+    return view('admin.jemput_donasi.peta', compact('donasi'));
 }
 
     /**

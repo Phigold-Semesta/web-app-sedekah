@@ -118,6 +118,8 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/jemput-donasi', [AdminController::class, 'jemput_index'])->name('jemput_donasi.index');
 
 Route::post('/jemput-donasi/update/{id_donasi}', [AdminController::class, 'update_status_penjemputan'])->name('jemput_donasi.update');
+// Tambahkan di dalam group route admin di routes/web.php
+Route::get('/jemput-donasi/peta/{id_donasi}', [AdminController::class, 'jemput_peta'])->name('jemput_donasi.peta');
 
         
         // --- GRUP RUTE KELOLA RIWAYAT DONASI KESELURUHAN ---
