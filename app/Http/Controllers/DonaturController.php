@@ -491,28 +491,28 @@ class DonaturController extends Controller
 
     // --- AREA PELACAKAN DONASI BARANG (FITUR BARU) ---
     // ✅ TAMBAHAN: Fungsi untuk memuat data titik koordinat ke halaman peta donatur
-    public function lacakDonasiBarang($id)
-    {
-        // Pastikan hanya donatur pemilik donasi yang bisa mengakses pelacakan ini
-        $donasi = Donasi::with(['Donasi_Barang.pelacakan'])
-            ->where('id_donasi', $id)
-            ->where('id_donatur', Auth::guard('donatur')->id())
-            ->firstOrFail();
+   // Pastikan baris ini di DonaturController:
+// FUNGSI UNTUK DETAIL (DIPANGGIL SAAT KLIK TOMBOL HIJAU)
+public function lacakDonasiBarang($id)
+{
+    $donasi = Donasi::with(['Donasi_Barang.pelacakan'])
+        ->where('id_donasi', $id)
+        ->where('id_donatur', Auth::guard('donatur')->id())
+        ->firstOrFail();
 
-        // Meneruskan data ke View Blade untuk dirender menggunakan Leaflet.js
-        return view('donatur.donasi.lacak', compact('donasi'));
-    }
+    // Pastikan diarahkan ke 'donatur.donasi.lacak', BUKAN 'donatur.donasi.lacak_index'
+    return view('donatur.donasi.lacak', compact('donasi'));
+}
 
-    // --- TAMBAHAN: Khusus untuk Sidebar "Lacak Donasi" (Menampilkan Daftar) ---
-    public function lacakIndex() 
-    {
-        // Menampilkan daftar donasi barang milik donatur yang statusnya memungkinkan untuk dilacak
-        $donasiBarang = Donasi::where('id_donatur', Auth::guard('donatur')->id())
-            ->where('jenis_donasi', 'barang')
-            ->whereIn('status_donasi', ['menunggu penjemputan', 'sedang dikirim', 'berhasil'])
-            ->orderBy('tgl_donasi', 'desc')
-            ->get();
+// FUNGSI UNTUK DAFTAR (DIPANGGIL SAAT KLIK MENU SIDEBAR)
+public function lacakIndex() 
+{
+    $donasiBarang = Donasi::where('id_donatur', Auth::guard('donatur')->id())
+        ->where('jenis_donasi', 'barang')
+        ->whereIn('status_donasi', ['menunggu penjemputan', 'sedang dikirim', 'berhasil'])
+        ->orderBy('tgl_donasi', 'desc')
+        ->get();
 
-        return view('donatur.donasi.lacak_index', compact('donasiBarang'));
-    }
+    return view('donatur.donasi.lacak_index', compact('donasiBarang'));
+}
 }
