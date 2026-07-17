@@ -5,17 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
-use App\Models\AuditLog; // Ditambahkan agar data log bisa dipanggil secara dinamis
-use App\Models\User; // Ditambahkan untuk memanipulasi data tabel user secara dinamis
-use App\Models\Donatur; // DISINKRONKAN: Memanggil Model Donatur tanpa huruf S jamak di ujung kata
-use App\Models\Donasi; // DISINKRONKAN: Memanggil Model Donasi untuk riwayat transaksi gabungan
-use App\Models\KategoriBarang; // DISINKRONKAN: Memanggil Model KategoriBarang untuk pengelolaan master logistik barang
-use App\Models\Penilaian; // DISINKRONKAN: Memanggil Model Penilaian untuk modul ulasan rating kunjungan donatur
-use App\Exports\DonasiKeseluruhanExport; // DISINKRONKAN: Memanggil class export Maatwebsite Excel
-use Maatwebsite\Excel\Facades\Excel; // DISINKRONKAN: Memanggil Facade Laravel Excel untuk trigger download
-use Illuminate\Support\Facades\Hash; // Ditambahkan untuk enkripsi password manual aplikasi SEDEKAH
-use Illuminate\Support\Facades\Auth; // Ditambahkan untuk proteksi delete-self akun aktif
-use Illuminate\Support\Facades\DB; // DIKUKUHKAN: Untuk mengelola query tabel donatur secara aman
+use App\Models\AuditLog; 
+use App\Models\User; 
+use App\Models\Donatur; 
+use App\Models\Donasi; 
+use App\Models\KategoriBarang; 
+use App\Models\Penilaian; 
+use App\Models\PelacakanDonasiBarang; // <--- DITAMBAHKAN: Model pelacakan baru
+use App\Exports\DonasiKeseluruhanExport; 
+use Maatwebsite\Excel\Facades\Excel; 
+use Illuminate\Support\Facades\Hash; 
+use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
 {
@@ -58,6 +60,54 @@ class AdminController extends Controller
     public function distribusi(): View
     {
         return view('admin.distribusi');
+    }
+
+    /**
+     * --- FITUR BARU: Manajemen Jemput Donasi ---
+     * Mengelola daftar donasi barang yang menunggu penjemputan oleh kurir yayasan.
+     */
+    public function jemput_index(): View
+    {
+        $donasi_barang = Donasi::with(['donasi_barang', 'kunjungan.donatur'])
+            ->where('jenis_donasi', 'barang')
+            ->whereIn('status_donasi', ['menunggu penjemputan', 'sedang dikirim'])
+            ->orderBy('tgl_donasi', 'desc')
+            ->get();
+
+        return view('admin.jemput_donasi.index', compact('donasi_barang'));
+    }
+
+    /**
+     * --- FITUR BARU: Update Status & Koordinat Pelacakan ---
+     * Menerima koordinat dari HTML5 Geolocation HP kurir dan mengubah status barang.
+     */
+    public function update_status_penjemputan(Request $request, string|int $id_donasi): RedirectResponse
+    {
+        $request->validate([
+            'status_pelacakan' => 'required|string',
+            'latitude'         => 'required|numeric',
+            'longitude'        => 'required|numeric',
+        ]);
+
+        $donasi = Donasi::where('id_donasi', $id_donasi)->firstOrFail();
+        $barang = $donasi->donasi_barang;
+
+        if (!$barang) {
+            return redirect()->back()->with('error', 'Data donasi barang tidak ditemukan.');
+        }
+
+        // 1. Simpan Jejak Koordinat di Tabel Pelacakan
+        PelacakanDonasiBarang::create([
+            'id_donasi_barang' => $barang->id_donasi_barang,
+            'status_pelacakan' => $request->status_pelacakan,
+            'latitude'         => $request->latitude,
+            'longitude'        => $request->longitude,
+        ]);
+
+        // 2. Update status donasi utama
+        $donasi->update(['status_donasi' => $request->status_pelacakan]);
+
+        return redirect()->back()->with('success', 'Status dan lokasi barang berhasil diperbarui!');
     }
 
     /**
@@ -491,7 +541,7 @@ class AdminController extends Controller
                 $q->where('aksi_log', 'like', '%' . $search . '%')
                   ->orWhereHas('user', function($userQuery) use ($search) {
                       $userQuery->where('nama_user', 'like', '%' . $search . '%')
-                               ->orWhere('role', 'like', '%' . $search . '%');
+                                 ->orWhere('role', 'like', '%' . $search . '%');
                   });
             });
         }
@@ -707,48 +757,45 @@ class AdminController extends Controller
         return view('admin.rating_kunjungan.index', compact('rating_list'));
     }
 
-public function simpan_tanggapan(Request $request, $id_rating) 
-{
-    $penilaian = \App\Models\Penilaian::findOrFail($id_rating);
-    $penilaian->update(['tanggapan' => $request->tanggapan]);
+    public function simpan_tanggapan(Request $request, $id_rating) 
+    {
+        $penilaian = \App\Models\Penilaian::findOrFail($id_rating);
+        $penilaian->update(['tanggapan' => $request->tanggapan]);
 
-    return response()->json(['message' => 'Berhasil']); // Ini sangat penting untuk AJAX!
-}
+        return response()->json(['message' => 'Berhasil']); // Ini sangat penting untuk AJAX!
+    }
+
     /**
- * Menampilkan halaman verifikasi donasi (status: Pending).
- */
-public function verifikasi_index(): View
-{
-    $donasi_list = Donasi::with(['kunjungan.donatur', 'donasi_uang', 'donasi_barang'])
-        ->where('status_donasi', 'berhasil') // Ubah dari 'Pending' ke 'berhasil'
-        ->orderBy('id_donasi', 'desc')
-        ->get();
+     * Menampilkan halaman verifikasi donasi (status: Pending).
+     */
+    public function verifikasi_index(): View
+    {
+        $donasi_list = Donasi::with(['kunjungan.donatur', 'donasi_uang', 'donasi_barang'])
+            ->where('status_donasi', 'berhasil') // Ubah dari 'Pending' ke 'berhasil'
+            ->orderBy('id_donasi', 'desc')
+            ->get();
+            
+        return view('admin.verifikasi_donasi.index', compact('donasi_list'));
+    }
+
+    /**
+     * Memproses update status donasi (Contoh: Menjadi Selesai atau Ditolak).
+     */
+    public function verifikasi_update(Request $request, string|int $id_donasi): RedirectResponse
+    {
+        $donasi = Donasi::where('id_donasi', $id_donasi)->firstOrFail();
         
-    return view('admin.verifikasi_donasi.index', compact('donasi_list'));
-}
+        // Validasi status yang diizinkan
+        $request->validate([
+            'status' => 'required|in:Terverifikasi,Ditolak'
+        ]);
 
-/**
- * Memproses update status donasi (Contoh: Menjadi Selesai atau Ditolak).
- */
-public function verifikasi_update(Request $request, string|int $id_donasi): RedirectResponse
-{
-    $donasi = Donasi::where('id_donasi', $id_donasi)->firstOrFail();
-    
-    // Validasi status yang diizinkan
-    $request->validate([
-        'status' => 'required|in:Terverifikasi,Ditolak'
-    ]);
+        // Update status dan catat siapa admin yang memprosesnya
+        $donasi->update([
+            'status_donasi' => $request->status,
+            'id_user' => Auth::id()
+        ]);
 
-    // Update status dan catat siapa admin yang memprosesnya
-    $donasi->update([
-        'status_donasi' => $request->status,
-        'id_user' => Auth::id()
-    ]);
-
-    // Opsional: Tambahkan log audit jika Anda ingin melacak jejak admin
-    // AuditLog::create(['id_user' => Auth::id(), 'aksi_log' => "Verifikasi donasi ID: $id_donasi"]);
-
-    return redirect()->route('admin.verifikasi.index')->with('success', 'Donasi berhasil diverifikasi.');
-}
-
+        return redirect()->route('admin.verifikasi.index')->with('success', 'Donasi berhasil diverifikasi.');
+    }
 }

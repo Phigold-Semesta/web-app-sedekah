@@ -205,6 +205,9 @@ Route::middleware(['auth:donatur'])->prefix('donatur')->name('donatur.')->group(
 
     Route::get('/riwayat', [DonaturController::class, 'riwayat'])->name('riwayat.index');
 
+    Route::get('/lacak', [DonaturController::class, 'lacakIndex'])->name('lacak.index');
+    Route::get('/lacak/{id}', [DonaturController::class, 'lacakDonasiBarang'])->name('lacak.show');
+
     // --- RUTE RATING & KRITIK/SARAN (DITAMBAHKAN) ---
     Route::prefix('rating')->name('rating.')->group(function () {
         Route::get('/', [DonaturController::class, 'indexRating'])->name('index');

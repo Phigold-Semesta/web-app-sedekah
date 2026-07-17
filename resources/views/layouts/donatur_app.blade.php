@@ -88,6 +88,11 @@
     <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat</span>
 </a>
 
+<a href="{{ route('donatur.lacak.index') }}" class="nav-item {{ request()->routeIs('donatur.lacak.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-map-marked-alt w-6 text-center"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Lacak Donasi</span>
+</a>
+
 <a href="{{ route('donatur.rating.index') }}" class="nav-item {{ request()->routeIs('donatur.rating.index') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
     <i class="fas fa-star w-6 text-center"></i>
     <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Rating</span>
