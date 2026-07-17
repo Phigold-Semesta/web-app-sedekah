@@ -507,12 +507,22 @@ public function lacakDonasiBarang($id)
 // FUNGSI UNTUK DAFTAR (DIPANGGIL SAAT KLIK MENU SIDEBAR)
 public function lacakIndex() 
 {
-    $donasiBarang = Donasi::where('id_donatur', Auth::guard('donatur')->id())
+    $donaturId = Auth::guard('donatur')->id();
+    
+    // SINKRONISASI: Tambahkan semua status yang bisa di-update oleh Admin
+    $donasiBarang = Donasi::where('id_donatur', $donaturId)
         ->where('jenis_donasi', 'barang')
-        ->whereIn('status_donasi', ['menunggu penjemputan', 'sedang dikirim', 'berhasil'])
+        ->whereIn('status_donasi', [
+            'menunggu penjemputan', 
+            'Kurir Menuju Lokasi', 
+            'Barang Dijemput', 
+            'Tiba di Panti', 
+            'sedang dikirim', 
+            'berhasil'
+        ])
         ->orderBy('tgl_donasi', 'desc')
         ->get();
-
+        
     return view('donatur.donasi.lacak_index', compact('donasiBarang'));
 }
 }

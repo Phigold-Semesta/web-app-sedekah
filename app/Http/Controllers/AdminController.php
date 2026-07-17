@@ -81,34 +81,26 @@ class AdminController extends Controller
      * --- FITUR BARU: Update Status & Koordinat Pelacakan ---
      * Menerima koordinat dari HTML5 Geolocation HP kurir dan mengubah status barang.
      */
-    public function update_status_penjemputan(Request $request, string|int $id_donasi): RedirectResponse
-    {
-        $request->validate([
-            'status_pelacakan' => 'required|string',
-            'latitude'         => 'required|numeric',
-            'longitude'        => 'required|numeric',
-        ]);
+    public function update_status_penjemputan(Request $request, $id_donasi)
+{
+    $donasi = Donasi::findOrFail($id_donasi);
+    $barang = \App\Models\DonasiBarang::where('id_donasi', $id_donasi)->first();
 
-        $donasi = Donasi::where('id_donasi', $id_donasi)->firstOrFail();
-        $barang = $donasi->donasi_barang;
+    // 1. Update status donasi
+    $donasi->update(['status_donasi' => $request->status_pelacakan]);
 
-        if (!$barang) {
-            return redirect()->back()->with('error', 'Data donasi barang tidak ditemukan.');
-        }
-
-        // 1. Simpan Jejak Koordinat di Tabel Pelacakan
-        PelacakanDonasiBarang::create([
+    // 2. SELALU Simpan log pelacakan, tidak peduli statusnya apa
+    if ($barang) {
+        \App\Models\PelacakanDonasiBarang::create([
             'id_donasi_barang' => $barang->id_donasi_barang,
             'status_pelacakan' => $request->status_pelacakan,
             'latitude'         => $request->latitude,
             'longitude'        => $request->longitude,
         ]);
-
-        // 2. Update status donasi utama
-        $donasi->update(['status_donasi' => $request->status_pelacakan]);
-
-        return redirect()->back()->with('success', 'Status dan lokasi barang berhasil diperbarui!');
     }
+
+    return back()->with('success', 'Status berhasil diperbarui!');
+}
 
     /**
      * Riwayat Transaksi Keseluruhan (Index).

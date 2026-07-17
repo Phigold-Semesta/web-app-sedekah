@@ -113,6 +113,12 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/update/{id_kategori_barang}', [AdminController::class, 'kategoriUpdate'])->name('update');
             Route::delete('/destroy/{id_kategori_barang}', [AdminController::class, 'kategoriDestroy'])->name('destroy');
         });
+
+       
+Route::get('/jemput-donasi', [AdminController::class, 'jemput_index'])->name('jemput_donasi.index');
+
+Route::post('/jemput-donasi/update/{id_donasi}', [AdminController::class, 'update_status_penjemputan'])->name('jemput_donasi.update');
+
         
         // --- GRUP RUTE KELOLA RIWAYAT DONASI KESELURUHAN ---
         Route::prefix('riwayat-donasi')->name('riwayat_donasi.')->group(function () {

@@ -177,6 +177,11 @@
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Kategori Barang</span>
                     </a>
 
+                    <a href="{{ route('admin.jemput_donasi.index') }}" class="nav-item {{ request()->routeIs('admin.jemput_donasi.index') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
+    <i class="fas fa-truck w-6 text-center text-sm"></i>
+    <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Jemput Donasi</span>
+</a>
+
                     <a href="{{ route('admin.riwayat_donasi.index') }}" class="nav-item {{ request()->routeIs('admin.riwayat_donasi.*') ? 'sidebar-active' : 'hover:text-white hover:bg-white/5' }}">
                         <i class="fas fa-history w-6 text-center text-sm"></i>
                         <span class="nav-text ml-4 text-[11px] font-black uppercase tracking-widest">Riwayat Kelola Donasi</span>
